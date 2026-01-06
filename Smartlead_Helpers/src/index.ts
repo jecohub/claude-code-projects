@@ -152,9 +152,21 @@ async function main() {
         textLines.push(`    - Stopped: ${report.activeLeadsSummary.stopped.toLocaleString()} (${((report.activeLeadsSummary.stopped / report.activeLeadsSummary.totalActive) * 100).toFixed(1)}%)`);
       }
 
+      // Active Campaigns Summary
+      const activeCampaignsList = report.campaigns.filter(c => c.campaignStatus === "ACTIVE");
+      if (activeCampaignsList.length > 0) {
+        textLines.push(`\n✅ ACTIVE CAMPAIGNS (${activeCampaignsList.length}):`);
+        for (const campaign of activeCampaignsList) {
+          textLines.push(`  ${campaign.campaignName}`);
+          textLines.push(`    Campaign ID: ${campaign.campaignId}`);
+          textLines.push(`    Total Leads: ${campaign.leadCounts.total.toLocaleString()}`);
+          textLines.push(``);
+        }
+      }
+
       // Paused Campaigns Section
       if (report.pausedCampaignDetails.length > 0) {
-        textLines.push(`\n⏸️  PAUSED CAMPAIGNS:`);
+        textLines.push(`\n⏸️  PAUSED CAMPAIGNS (${report.pausedCampaignDetails.length}):`);
         textLines.push(`  Note: The Smartlead API does not provide pause reasons. Common reasons include:`);
         textLines.push(`    - Daily sending limit reached`);
         textLines.push(`    - Email quota/credits exhausted`);
@@ -163,11 +175,9 @@ async function main() {
         textLines.push(`    - Manually paused by user`);
         textLines.push(``);
         for (const pausedCampaign of report.pausedCampaignDetails) {
-          textLines.push(`  Campaign: "${pausedCampaign.campaignName}" (ID: ${pausedCampaign.campaignId})`);
-          textLines.push(`    Created: ${new Date(pausedCampaign.createdAt).toLocaleDateString()}`);
+          textLines.push(`  ${pausedCampaign.campaignName}`);
+          textLines.push(`    Campaign ID: ${pausedCampaign.campaignId}`);
           textLines.push(`    Total Leads: ${pausedCampaign.totalLeads.toLocaleString()}`);
-          textLines.push(`    Not Started: ${pausedCampaign.notStarted.toLocaleString()}`);
-          textLines.push(`    In Progress: ${pausedCampaign.inProgress.toLocaleString()}`);
           textLines.push(``);
         }
       }
