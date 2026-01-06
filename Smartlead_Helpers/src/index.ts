@@ -152,34 +152,21 @@ async function main() {
         textLines.push(`    - Stopped: ${report.activeLeadsSummary.stopped.toLocaleString()} (${((report.activeLeadsSummary.stopped / report.activeLeadsSummary.totalActive) * 100).toFixed(1)}%)`);
       }
 
-      // Active Campaigns Summary
+      // Active Campaigns List
       const activeCampaignsList = report.campaigns.filter(c => c.campaignStatus === "ACTIVE");
       if (activeCampaignsList.length > 0) {
-        textLines.push(`\n✅ ACTIVE CAMPAIGNS (${activeCampaignsList.length}):`);
-        for (const campaign of activeCampaignsList) {
-          textLines.push(`  ${campaign.campaignName}`);
-          textLines.push(`    Campaign ID: ${campaign.campaignId}`);
-          textLines.push(`    Total Leads: ${campaign.leadCounts.total.toLocaleString()}`);
-          textLines.push(``);
-        }
+        textLines.push(`\nActive Campaigns: ${activeCampaignsList.length} campaigns`);
+        activeCampaignsList.forEach((campaign, index) => {
+          textLines.push(`${index + 1}. ${campaign.campaignName} (ID: ${campaign.campaignId}) - ${campaign.leadCounts.total.toLocaleString()} leads`);
+        });
       }
 
       // Paused Campaigns Section
       if (report.pausedCampaignDetails.length > 0) {
-        textLines.push(`\n⏸️  PAUSED CAMPAIGNS (${report.pausedCampaignDetails.length}):`);
-        textLines.push(`  Note: The Smartlead API does not provide pause reasons. Common reasons include:`);
-        textLines.push(`    - Daily sending limit reached`);
-        textLines.push(`    - Email quota/credits exhausted`);
-        textLines.push(`    - Mailbox connectivity issues`);
-        textLines.push(`    - Lead exhaustion (all leads completed)`);
-        textLines.push(`    - Manually paused by user`);
-        textLines.push(``);
-        for (const pausedCampaign of report.pausedCampaignDetails) {
-          textLines.push(`  ${pausedCampaign.campaignName}`);
-          textLines.push(`    Campaign ID: ${pausedCampaign.campaignId}`);
-          textLines.push(`    Total Leads: ${pausedCampaign.totalLeads.toLocaleString()}`);
-          textLines.push(``);
-        }
+        textLines.push(`\nPaused Campaigns: ${report.pausedCampaignDetails.length} campaigns`);
+        report.pausedCampaignDetails.forEach((pausedCampaign, index) => {
+          textLines.push(`${index + 1}. ${pausedCampaign.campaignName} (ID: ${pausedCampaign.campaignId}) - ${pausedCampaign.totalLeads.toLocaleString()} leads`);
+        });
       }
 
       // Email Statistics (Overall)
