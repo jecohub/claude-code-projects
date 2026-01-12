@@ -168,20 +168,20 @@ function buildReport(
     );
   }
 
-  // Get top performers (top 5 in each category)
+  // Get top performers (top 15 in each category)
   const byCompositeScore = [...campaignMetrics]
     .sort((a, b) => b.compositeScore - a.compositeScore)
-    .slice(0, 5);
+    .slice(0, 15);
 
   const byOpenRate = [...campaignMetrics]
     .filter((c) => c.engagement.sent >= 100) // Only campaigns with meaningful volume
     .sort((a, b) => b.engagement.openRate - a.engagement.openRate)
-    .slice(0, 5);
+    .slice(0, 15);
 
   const byPositiveResponse = [...campaignMetrics]
     .filter((c) => c.engagement.sent >= 100)
     .sort((a, b) => b.positiveResponseRate - a.positiveResponseRate)
-    .slice(0, 5);
+    .slice(0, 15);
 
   return {
     clientId,
@@ -407,7 +407,7 @@ async function main() {
     `    Avg Positive Response Rate: ${report.aggregated.averagePositiveResponseRate}%`
   );
 
-  console.log(`\n  TOP 5 BY COMPOSITE SCORE:`);
+  console.log(`\n  TOP 15 BY COMPOSITE SCORE:`);
   report.topPerformers.byCompositeScore.forEach((c, i) => {
     console.log(
       `    ${i + 1}. ${c.campaignName.slice(0, 50)}...`
@@ -420,7 +420,7 @@ async function main() {
     );
   });
 
-  console.log(`\n  TOP 5 BY POSITIVE RESPONSE RATE:`);
+  console.log(`\n  TOP 15 BY POSITIVE RESPONSE RATE:`);
   report.topPerformers.byPositiveResponse.forEach((c, i) => {
     console.log(
       `    ${i + 1}. ${c.campaignName.slice(0, 50)}...`
