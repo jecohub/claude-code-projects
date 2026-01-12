@@ -10,11 +10,14 @@
     "start": "node dist/index.js",
     "lint": "tsc --noEmit",
     "report": "node --loader ts-node/esm scripts/generate-report.ts",
-    "report:json": "node --loader ts-node/esm scripts/generate-report.ts --format=json"
+    "report:json": "node --loader ts-node/esm scripts/generate-report.ts --format=json",
+    "analyze": "npx tsx scripts/analyze-campaign-success.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.25.1",
+    "csv-parse": "^6.1.0",
     "dotenv": "^16.4.5",
+    "p-limit": "^7.2.0",
     "zod": "^4.3.5"
   },
   "devDependencies": {
@@ -23,4 +26,3 @@
     "typescript": "^5.3.3"
   }
 }
-
