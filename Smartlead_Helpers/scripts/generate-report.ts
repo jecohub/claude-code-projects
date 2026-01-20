@@ -1,6 +1,16 @@
 import { getConfig } from "../src/config.js";
 import { SmartleadClient } from "../src/smartleadClient.js";
 import type { ClientCampaignReport } from "../src/types.js";
+import type { CampaignHealth, TrendDirection } from "../src/types.js";
+import {
+  getHealthStatus,
+  getStatusIcon,
+  getTrendIcon,
+  countSendingDays,
+  projectRunOutDate,
+  getLeadSequencePosition,
+  calculateEmailsRemaining,
+} from "../src/utils/healthCalculator.js";
 
 interface CliArgs {
   clientId?: string;
@@ -29,6 +39,159 @@ function parseArgs(): CliArgs {
     clientId,
     fromDate,
     format: format || "text",
+  };
+}
+
+async function calculateCampaignHealth(
+  client: SmartleadClient,
+  report: ClientCampaignReport
+): Promise<CampaignHealth> {
+  const today = new Date();
+  const activeCampaigns = report.campaigns.filter(c => c.campaignStatus === 'ACTIVE');
+
+  if (activeCampaigns.length === 0) {
+    return {
+      status: 'Empty',
+      statusIcon: '⚪',
+      daysRemaining: 0,
+      runOutDate: null,
+      today,
+      remainingLeads: { total: 0, notStarted: 0, inProgress: 0 },
+      avgSendRate: 0,
+      trend: { direction: 'insufficient_data', percentChange: null, icon: '⏳' },
+      emailsRemaining: 0,
+      totalEmailsSent: 0,
+      sendingDaysPerWeek: 0,
+      campaignStartDate: null,
+      message: 'No active campaigns to analyze',
+    };
+  }
+
+  const notStarted = report.activeLeadsSummary.notStarted;
+  const inProgress = report.activeLeadsSummary.inprogress;
+  const remainingLeadsTotal = notStarted + inProgress;
+
+  if (remainingLeadsTotal === 0) {
+    const totalSent = activeCampaigns.reduce((sum, c) => sum + c.emailStats.sent, 0);
+    return {
+      status: 'Empty',
+      statusIcon: '⚪',
+      daysRemaining: 0,
+      runOutDate: null,
+      today,
+      remainingLeads: { total: 0, notStarted: 0, inProgress: 0 },
+      avgSendRate: 0,
+      trend: { direction: 'insufficient_data', percentChange: null, icon: '⏳' },
+      emailsRemaining: 0,
+      totalEmailsSent: totalSent,
+      sendingDaysPerWeek: 0,
+      campaignStartDate: null,
+      message: 'All leads have been processed',
+    };
+  }
+
+  let totalEmailsSent = 0;
+  let totalEmailsRemaining = 0;
+  let earliestCampaignDate: Date | null = null;
+  const allSendingDays = new Set<number>();
+
+  for (const campaign of activeCampaigns) {
+    totalEmailsSent += campaign.emailStats.sent;
+
+    if (campaign.configuration?.sendingDays) {
+      campaign.configuration.sendingDays.forEach(d => allSendingDays.add(d));
+    }
+
+    const campaignDate = new Date(campaign.createdAt);
+    if (!earliestCampaignDate || campaignDate < earliestCampaignDate) {
+      earliestCampaignDate = campaignDate;
+    }
+
+    const sequenceSteps = campaign.configuration?.sequenceSteps || 3;
+
+    try {
+      const leads = await client.getCampaignLeads(campaign.campaignId);
+
+      for (const lead of leads) {
+        const leadData = lead.lead || lead;
+        const status = leadData.lead_status?.toLowerCase() || '';
+
+        if (status === 'completed' || status === 'blocked' || status === 'stopped') {
+          continue;
+        }
+
+        const sequencePosition = getLeadSequencePosition(lead);
+        totalEmailsRemaining += calculateEmailsRemaining(sequencePosition, sequenceSteps);
+      }
+    } catch (error) {
+      const campaignNotStarted = campaign.leadCounts.notStarted;
+      const campaignInProgress = campaign.leadCounts.inprogress;
+      totalEmailsRemaining += campaignNotStarted * sequenceSteps;
+      totalEmailsRemaining += campaignInProgress * Math.ceil(sequenceSteps / 2);
+    }
+  }
+
+  const sendingDays = allSendingDays.size > 0 ? Array.from(allSendingDays) : [0, 1, 2, 3, 4, 5, 6];
+  const sendingDaysPerWeek = sendingDays.length;
+
+  let avgSendRate = 0;
+  if (earliestCampaignDate && totalEmailsSent > 0) {
+    const sendingDaysSinceStart = countSendingDays(earliestCampaignDate, today, sendingDays);
+    avgSendRate = totalEmailsSent / sendingDaysSinceStart;
+  }
+
+  if (totalEmailsSent === 0 || avgSendRate === 0) {
+    return {
+      status: 'Full',
+      statusIcon: '🟢',
+      daysRemaining: 999,
+      runOutDate: null,
+      today,
+      remainingLeads: { total: remainingLeadsTotal, notStarted, inProgress },
+      avgSendRate: 0,
+      trend: { direction: 'insufficient_data', percentChange: null, icon: '⏳' },
+      emailsRemaining: totalEmailsRemaining,
+      totalEmailsSent: 0,
+      sendingDaysPerWeek,
+      campaignStartDate: earliestCampaignDate,
+      message: 'Not started sending yet',
+    };
+  }
+
+  const sendingDaysNeeded = Math.ceil(totalEmailsRemaining / avgSendRate);
+  const runOutDate = projectRunOutDate(today, sendingDaysNeeded, sendingDays);
+  const daysRemaining = Math.ceil((runOutDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+  let trendDirection: TrendDirection = 'insufficient_data';
+  let trendPercentChange: number | null = null;
+
+  if (earliestCampaignDate) {
+    const daysSinceStart = Math.ceil((today.getTime() - earliestCampaignDate.getTime()) / (1000 * 60 * 60 * 24));
+    if (daysSinceStart >= 14) {
+      trendDirection = 'stable';
+      trendPercentChange = 0;
+    }
+  }
+
+  const status = getHealthStatus(daysRemaining, remainingLeadsTotal > 0);
+
+  return {
+    status,
+    statusIcon: getStatusIcon(status),
+    daysRemaining,
+    runOutDate,
+    today,
+    remainingLeads: { total: remainingLeadsTotal, notStarted, inProgress },
+    avgSendRate: Math.round(avgSendRate),
+    trend: {
+      direction: trendDirection,
+      percentChange: trendPercentChange,
+      icon: getTrendIcon(trendDirection),
+    },
+    emailsRemaining: totalEmailsRemaining,
+    totalEmailsSent,
+    sendingDaysPerWeek,
+    campaignStartDate: earliestCampaignDate,
   };
 }
 
