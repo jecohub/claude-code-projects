@@ -257,6 +257,12 @@ export interface AddLeadsResponse {
   is_lead_limit_exhausted: boolean;
   lead_import_stopped_count: number;
   bounce_count: number;
+  /**
+   * Internal helper for the local lead ledger feature.
+   * When present, this is the set of emails considered "new" after de-duping against existing campaign leads.
+   * (Not part of Smartlead's public API response.)
+   */
+  ledger_new_lead_emails?: string[];
   // Backwards compatibility
   uploaded_count?: number;
   unsubscribed_count?: number;
@@ -523,5 +529,37 @@ export interface CampaignSuccessReport {
     scoringWeights: ScoringWeights;
     notes: string[];
   };
+}
+
+// ========================================
+// Campaign Health Types
+// ========================================
+
+export type HealthStatus = 'Low' | 'Prepare' | 'Full' | 'Empty';
+
+export type TrendDirection = 'accelerating' | 'stable' | 'slowing' | 'insufficient_data';
+
+export interface CampaignHealth {
+  status: HealthStatus;
+  statusIcon: string;
+  daysRemaining: number;
+  runOutDate: Date | null;
+  today: Date;
+  remainingLeads: {
+    total: number;
+    notStarted: number;
+    inProgress: number;
+  };
+  avgSendRate: number; // emails per day
+  trend: {
+    direction: TrendDirection;
+    percentChange: number | null;
+    icon: string;
+  };
+  emailsRemaining: number;
+  totalEmailsSent: number;
+  sendingDaysPerWeek: number;
+  campaignStartDate: Date | null;
+  message?: string; // For edge cases like "No active campaigns"
 }
 
