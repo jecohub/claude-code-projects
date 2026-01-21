@@ -8,6 +8,7 @@ import {
   getTrendIcon,
   countSendingDays,
   projectRunOutDate,
+  formatDate,
   getLeadSequencePosition,
   calculateEmailsRemaining,
 } from "../src/utils/healthCalculator.js";
@@ -375,6 +376,57 @@ function formatReport(report: ClientCampaignReport, fromDateStr?: string): strin
   }
 
   return textLines.join("\n");
+}
+
+function formatHealthSection(health: CampaignHealth): string {
+  const lines: string[] = [];
+
+  lines.push('');
+  lines.push('================================================================================');
+  lines.push('📊 CAMPAIGN HEALTH');
+  lines.push('================================================================================');
+  lines.push('');
+
+  // Handle edge cases with messages
+  if (health.message) {
+    lines.push(`Status:         ${health.statusIcon} ${health.status}`);
+    lines.push(`Message:        ${health.message}`);
+    lines.push('');
+    lines.push(`Remaining leads:     ${health.remainingLeads.total.toLocaleString()} (Not Started: ${health.remainingLeads.notStarted.toLocaleString()} | In Progress: ${health.remainingLeads.inProgress.toLocaleString()})`);
+    if (health.totalEmailsSent > 0) {
+      lines.push(`Avg send rate:       ${health.avgSendRate.toLocaleString()} emails/day (historical)`);
+    }
+    lines.push('');
+    lines.push('================================================================================');
+    return lines.join('\n');
+  }
+
+  // Normal output
+  const runOutDateStr = health.runOutDate ? formatDate(health.runOutDate) : 'N/A';
+  const todayStr = formatDate(health.today);
+
+  lines.push(`Status:         ${health.statusIcon} ${health.status}`);
+  lines.push(`Will run out:   ${runOutDateStr} (${health.daysRemaining} days)`);
+  lines.push(`Today:          ${todayStr}`);
+  lines.push('');
+  lines.push(`Remaining leads:     ${health.remainingLeads.total.toLocaleString()} (Not Started: ${health.remainingLeads.notStarted.toLocaleString()} | In Progress: ${health.remainingLeads.inProgress.toLocaleString()})`);
+  lines.push(`Avg send rate:       ${health.avgSendRate.toLocaleString()} emails/day`);
+
+  // Trend
+  if (health.trend.direction === 'insufficient_data') {
+    lines.push(`Trend:               ${health.trend.icon} Insufficient data`);
+  } else {
+    const changeStr = health.trend.percentChange !== null
+      ? (health.trend.percentChange >= 0 ? `+${health.trend.percentChange}%` : `${health.trend.percentChange}%`)
+      : '';
+    const directionLabel = health.trend.direction.charAt(0).toUpperCase() + health.trend.direction.slice(1);
+    lines.push(`Trend:               ${health.trend.icon} ${directionLabel}${changeStr ? ` (${changeStr} vs previous period)` : ''}`);
+  }
+
+  lines.push('');
+  lines.push('================================================================================');
+
+  return lines.join('\n');
 }
 
 function showUsage() {
