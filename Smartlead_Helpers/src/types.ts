@@ -557,6 +557,12 @@ export interface CampaignHealth {
     icon: string;
   };
   emailsRemaining: number;
+  /** Breakdown of emails remaining by lead status */
+  emailsRemainingBreakdown: {
+    notStarted: number;      // exact: notStarted × sequenceSteps
+    inProgress: number;      // estimated based on sent count
+    isEstimated: boolean;    // true if In Progress is estimated
+  };
   totalEmailsSent: number;
   sendingDaysPerWeek: number;
   campaignStartDate: Date | null;

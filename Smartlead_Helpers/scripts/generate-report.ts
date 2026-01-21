@@ -61,6 +61,7 @@ async function calculateCampaignHealth(
       avgSendRate: 0,
       trend: { direction: 'insufficient_data', percentChange: null, icon: '⏳' },
       emailsRemaining: 0,
+      emailsRemainingBreakdown: { notStarted: 0, inProgress: 0, isEstimated: false },
       totalEmailsSent: 0,
       sendingDaysPerWeek: 0,
       campaignStartDate: null,
@@ -84,6 +85,7 @@ async function calculateCampaignHealth(
       avgSendRate: 0,
       trend: { direction: 'insufficient_data', percentChange: null, icon: '⏳' },
       emailsRemaining: 0,
+      emailsRemainingBreakdown: { notStarted: 0, inProgress: 0, isEstimated: false },
       totalEmailsSent: totalSent,
       sendingDaysPerWeek: 0,
       campaignStartDate: null,
@@ -92,12 +94,17 @@ async function calculateCampaignHealth(
   }
 
   let totalEmailsSent = 0;
-  let totalEmailsRemaining = 0;
+  let totalCompleted = 0;
   let earliestCampaignDate: Date | null = null;
   const allSendingDays = new Set<number>();
 
+  // Track per-campaign data for accurate calculation
+  let totalNotStartedEmails = 0;
+  let totalInProgressEmails = 0;
+
   for (const campaign of activeCampaigns) {
     totalEmailsSent += campaign.emailStats.sent;
+    totalCompleted += campaign.leadCounts.completed;
 
     if (campaign.configuration?.sendingDays) {
       campaign.configuration.sendingDays.forEach(d => allSendingDays.add(d));
@@ -109,28 +116,33 @@ async function calculateCampaignHealth(
     }
 
     const sequenceSteps = campaign.configuration?.sequenceSteps || 3;
+    const campaignNotStarted = campaign.leadCounts.notStarted;
+    const campaignInProgress = campaign.leadCounts.inprogress;
+    const campaignCompleted = campaign.leadCounts.completed;
+    const campaignSent = campaign.emailStats.sent;
 
-    try {
-      const leads = await client.getCampaignLeads(campaign.campaignId);
+    // Not Started leads need all sequence steps
+    totalNotStartedEmails += campaignNotStarted * sequenceSteps;
 
-      for (const lead of leads) {
-        const leadData = lead.lead || lead;
-        const status = leadData.lead_status?.toLowerCase() || '';
+    // In Progress leads: estimate remaining based on emails already sent
+    // Completed leads received all sequenceSteps emails
+    const completedEmails = campaignCompleted * sequenceSteps;
+    // Emails sent to In Progress leads = total sent - completed emails
+    const inProgressEmailsSent = Math.max(0, campaignSent - completedEmails);
 
-        if (status === 'completed' || status === 'blocked' || status === 'stopped') {
-          continue;
-        }
-
-        const sequencePosition = getLeadSequencePosition(lead);
-        totalEmailsRemaining += calculateEmailsRemaining(sequencePosition, sequenceSteps);
-      }
-    } catch (error) {
-      const campaignNotStarted = campaign.leadCounts.notStarted;
-      const campaignInProgress = campaign.leadCounts.inprogress;
-      totalEmailsRemaining += campaignNotStarted * sequenceSteps;
-      totalEmailsRemaining += campaignInProgress * Math.ceil(sequenceSteps / 2);
+    if (campaignInProgress > 0 && inProgressEmailsSent > 0) {
+      // Average emails already sent per In Progress lead
+      const avgSentPerInProgress = inProgressEmailsSent / campaignInProgress;
+      // Average remaining = sequenceSteps - avgSent (minimum 0)
+      const avgRemainingPerInProgress = Math.max(0, sequenceSteps - avgSentPerInProgress);
+      totalInProgressEmails += campaignInProgress * avgRemainingPerInProgress;
+    } else if (campaignInProgress > 0) {
+      // No emails sent yet, but leads are "in progress" - assume they need ~half
+      totalInProgressEmails += campaignInProgress * Math.ceil(sequenceSteps / 2);
     }
   }
+
+  const totalEmailsRemaining = Math.round(totalNotStartedEmails + totalInProgressEmails);
 
   const sendingDays = allSendingDays.size > 0 ? Array.from(allSendingDays) : [0, 1, 2, 3, 4, 5, 6];
   const sendingDaysPerWeek = sendingDays.length;
@@ -152,6 +164,11 @@ async function calculateCampaignHealth(
       avgSendRate: 0,
       trend: { direction: 'insufficient_data', percentChange: null, icon: '⏳' },
       emailsRemaining: totalEmailsRemaining,
+      emailsRemainingBreakdown: {
+        notStarted: Math.round(totalNotStartedEmails),
+        inProgress: Math.round(totalInProgressEmails),
+        isEstimated: true,
+      },
       totalEmailsSent: 0,
       sendingDaysPerWeek,
       campaignStartDate: earliestCampaignDate,
@@ -190,6 +207,11 @@ async function calculateCampaignHealth(
       icon: getTrendIcon(trendDirection),
     },
     emailsRemaining: totalEmailsRemaining,
+    emailsRemainingBreakdown: {
+      notStarted: Math.round(totalNotStartedEmails),
+      inProgress: Math.round(totalInProgressEmails),
+      isEstimated: true, // In Progress is always estimated since API doesn't provide per-sequence data
+    },
     totalEmailsSent,
     sendingDaysPerWeek,
     campaignStartDate: earliestCampaignDate,
@@ -410,6 +432,11 @@ function formatHealthSection(health: CampaignHealth): string {
   lines.push(`Today:          ${todayStr}`);
   lines.push('');
   lines.push(`Remaining leads:     ${health.remainingLeads.total.toLocaleString()} (Not Started: ${health.remainingLeads.notStarted.toLocaleString()} | In Progress: ${health.remainingLeads.inProgress.toLocaleString()})`);
+
+  // Emails remaining breakdown
+  const estLabel = health.emailsRemainingBreakdown.isEstimated ? ' (est.)' : '';
+  lines.push(`Emails remaining:    ${health.emailsRemaining.toLocaleString()} (Not Started: ${health.emailsRemainingBreakdown.notStarted.toLocaleString()} | In Progress: ${health.emailsRemainingBreakdown.inProgress.toLocaleString()}${estLabel})`);
+
   lines.push(`Avg send rate:       ${health.avgSendRate.toLocaleString()} emails/day`);
 
   // Trend
