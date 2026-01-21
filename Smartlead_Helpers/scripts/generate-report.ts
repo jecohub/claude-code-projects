@@ -473,13 +473,22 @@ async function main() {
     const report = await client.getCampaignReport(args.clientId, args.fromDate);
 
     if (args.format === "json") {
-      console.log(JSON.stringify(report, null, 2));
+      // Calculate health for JSON output too
+      const health = await calculateCampaignHealth(client, report);
+      const reportWithHealth = { ...report, health };
+      console.log(JSON.stringify(reportWithHealth, null, 2));
     } else {
       const fromDateStr = args.fromDate
         ? args.fromDate.toISOString()
         : undefined;
       const formatted = formatReport(report, fromDateStr);
       console.log(formatted);
+
+      // Add health section
+      console.log('\nCalculating campaign health...');
+      const health = await calculateCampaignHealth(client, report);
+      const healthSection = formatHealthSection(health);
+      console.log(healthSection);
     }
   } catch (error) {
     if (error instanceof Error) {
