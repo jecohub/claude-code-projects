@@ -14,8 +14,8 @@
  *   npx tsx scripts/analyze-campaign-success.ts --clientId=77930 --include-inactive -v
  */
 
-import { getConfig } from "../src/config.js";
-import { SmartleadClient } from "../src/smartleadClient.js";
+import { getConfig } from "../src/core/config.js";
+import { SmartleadClient } from "../src/core/smartleadClient.js";
 import type {
   CampaignSuccessReport,
   CampaignSuccessMetrics,
@@ -24,7 +24,7 @@ import type {
   EngagementMetrics,
   AggregatedMetrics,
   ScoringWeights,
-} from "../src/types.js";
+} from "../src/core/types.js";
 import * as fs from "fs";
 import * as path from "path";
 

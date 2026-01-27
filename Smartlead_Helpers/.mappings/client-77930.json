@@ -1,0 +1,91 @@
+{
+  "clientId": "77930",
+  "mappings": [
+    {
+      "csvColumn": "FO_FirstName",
+      "smartleadField": "first_name"
+    },
+    {
+      "csvColumn": "Last Name",
+      "smartleadField": "last_name"
+    },
+    {
+      "csvColumn": "Final Email",
+      "smartleadField": "email"
+    },
+    {
+      "csvColumn": "Normalized Company Name",
+      "smartleadField": "company_name"
+    },
+    {
+      "csvColumn": "Final Website",
+      "smartleadField": "website"
+    },
+    {
+      "csvColumn": "Full Name",
+      "smartleadField": "custom",
+      "customFieldName": "Full_Name"
+    },
+    {
+      "csvColumn": "Final Industry",
+      "smartleadField": "custom",
+      "customFieldName": "Final_Industry"
+    },
+    {
+      "csvColumn": "Tik Tok Account URL",
+      "smartleadField": "custom",
+      "customFieldName": "Tik_Tok_Account_URL"
+    },
+    {
+      "csvColumn": "Final Country",
+      "smartleadField": "custom",
+      "customFieldName": "Final_Country"
+    },
+    {
+      "csvColumn": "Female?",
+      "smartleadField": "custom",
+      "customFieldName": "Female?"
+    },
+    {
+      "csvColumn": "NNiche",
+      "smartleadField": "custom",
+      "customFieldName": "NNiche"
+    },
+    {
+      "csvColumn": "NFirst Line",
+      "smartleadField": "custom",
+      "customFieldName": "NFirst_Line"
+    },
+    {
+      "csvColumn": "P.S.",
+      "smartleadField": "custom",
+      "customFieldName": "P.S."
+    },
+    {
+      "csvColumn": "FO_OtherContacts",
+      "smartleadField": "custom",
+      "customFieldName": "FO_OtherContacts"
+    },
+    {
+      "csvColumn": "Title",
+      "smartleadField": "custom",
+      "customFieldName": "Title"
+    },
+    {
+      "csvColumn": "Country",
+      "smartleadField": "custom",
+      "customFieldName": "Country"
+    },
+    {
+      "csvColumn": "Final Provider",
+      "smartleadField": "custom",
+      "customFieldName": "Final_Provider"
+    },
+    {
+      "csvColumn": "Email Host",
+      "smartleadField": "custom",
+      "customFieldName": "Email_Host"
+    }
+  ],
+  "savedAt": "2026-01-14T12:00:00.000Z"
+}

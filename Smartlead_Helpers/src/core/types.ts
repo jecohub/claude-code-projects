@@ -539,6 +539,17 @@ export type HealthStatus = 'Low' | 'Prepare' | 'Full' | 'Empty';
 
 export type TrendDirection = 'accelerating' | 'stable' | 'slowing' | 'insufficient_data';
 
+/**
+ * Email account used for sending campaign emails
+ */
+export interface EmailAccount {
+  id: number;
+  from_name: string;
+  from_email: string;
+  is_smtp_success: boolean;
+  type: string; // GMAIL, SMTP, ZOHO, OUTLOOK
+}
+
 export interface CampaignHealth {
   status: HealthStatus;
   statusIcon: string;
@@ -566,6 +577,7 @@ export interface CampaignHealth {
   totalEmailsSent: number;
   sendingDaysPerWeek: number;
   campaignStartDate: Date | null;
+  activeSenderCount: number; // Unique email accounts able to send
   message?: string; // For edge cases like "No active campaigns"
 }
 

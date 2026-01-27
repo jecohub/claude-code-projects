@@ -1,0 +1,80 @@
+{
+  "clientId": "146909",
+  "mappings": [
+    {
+      "csvColumn": "FO_FirstName",
+      "smartleadField": "first_name"
+    },
+    {
+      "csvColumn": "Last Name",
+      "smartleadField": "last_name"
+    },
+    {
+      "csvColumn": "Full Name",
+      "smartleadField": "custom",
+      "customFieldName": "Full_Name"
+    },
+    {
+      "csvColumn": "Final Website",
+      "smartleadField": "website"
+    },
+    {
+      "csvColumn": "LinkedIn Profile",
+      "smartleadField": "linkedin_profile"
+    },
+    {
+      "csvColumn": "NNiche",
+      "smartleadField": "custom",
+      "customFieldName": "NNiche"
+    },
+    {
+      "csvColumn": "Reddit Mention",
+      "smartleadField": "custom",
+      "customFieldName": "Reddit_Mention"
+    },
+    {
+      "csvColumn": "Mentioned_or_Not",
+      "smartleadField": "custom",
+      "customFieldName": "Mentioned_or_Not"
+    },
+    {
+      "csvColumn": "Top Competitor",
+      "smartleadField": "custom",
+      "customFieldName": "Top_Competitor"
+    },
+    {
+      "csvColumn": "Advertising In",
+      "smartleadField": "custom",
+      "customFieldName": "Advertising_In"
+    },
+    {
+      "csvColumn": "FO_OtherContacts",
+      "smartleadField": "custom",
+      "customFieldName": "FO_OtherContacts"
+    },
+    {
+      "csvColumn": "Final Provider",
+      "smartleadField": "custom",
+      "customFieldName": "Final_Provider"
+    },
+    {
+      "csvColumn": "Final Email",
+      "smartleadField": "email"
+    },
+    {
+      "csvColumn": "Email Host",
+      "smartleadField": "custom",
+      "customFieldName": "Email_Host"
+    },
+    {
+      "csvColumn": "Final Company Name",
+      "smartleadField": "company_name"
+    },
+    {
+      "csvColumn": "Title",
+      "smartleadField": "custom",
+      "customFieldName": "Title"
+    }
+  ],
+  "savedAt": "2026-01-21T00:00:00.000Z"
+}

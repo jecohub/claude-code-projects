@@ -1,4 +1,4 @@
-import type { HealthStatus, TrendDirection } from '../types.js';
+import type { HealthStatus, TrendDirection } from '../../core/types.js';
 
 /**
  * Get health status based on days remaining

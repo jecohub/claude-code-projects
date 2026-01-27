@@ -23,13 +23,9 @@ import {
   DuplicationStepStatus,
   CampaignValidation,
   LeadCategorization,
+  EmailAccount,
 } from "./types.js";
-import { AdvancedRateLimiter } from "./utils/rateLimiter.js";
-import {
-  saveCheckpoint,
-  loadCheckpoint,
-  clearCheckpoint,
-} from "./utils/uploadCheckpoint.js";
+import { AdvancedRateLimiter } from "./rateLimiter.js";
 
 const DEFAULT_PAGE_SIZE = 200;
 const SMARTLEAD_GRAPHQL_URL = "https://fe-gql.smartlead.ai/v1/graphql";
@@ -230,6 +226,22 @@ export class SmartleadClient {
       new URLSearchParams(),
     );
     return Array.isArray(body) ? body : [];
+  }
+
+  /**
+   * Get all email accounts associated with a campaign
+   */
+  async getCampaignEmailAccounts(campaignId: number): Promise<EmailAccount[]> {
+    try {
+      const body = await this.getJson<EmailAccount[] | unknown>(
+        `/campaigns/${campaignId}/email-accounts`,
+        new URLSearchParams(),
+      );
+      return Array.isArray(body) ? body : [];
+    } catch (error) {
+      // Return empty array if endpoint fails
+      return [];
+    }
   }
 
   /**
@@ -917,7 +929,7 @@ export class SmartleadClient {
     };
 
     // Import fixed settings from config (AI categorization + bounce protection)
-    const { getFixedUiSettings } = await import("./campaignUiSettings.js");
+    const { getFixedUiSettings } = await import("../features/bulk-upload/campaignUiSettings.js");
     const fixedSettings = getFixedUiSettings();
 
     // Fetch OOO settings from source campaign
@@ -946,17 +958,19 @@ export class SmartleadClient {
       };
     }
 
-    // Merge: fixed AI/bounce + copied OOO
+    // Merge: fixed AI/bounce/domain rate limit + copied OOO
     const changes: Record<string, unknown> = {
       ai_categorisation_options: fixedSettings.ai_categorisation_options,
       auto_categorise_reply: fixedSettings.auto_categorise_reply,
       bounce_autopause_threshold: fixedSettings.bounce_autopause_threshold,
+      domain_level_rate_limit: fixedSettings.domain_level_rate_limit,
       out_of_office_detection_settings: source.out_of_office_detection_settings ?? null,
     };
 
     const details: string[] = [
       `auto_categorise_reply=${fixedSettings.auto_categorise_reply ? "true" : "false"} (fixed)`,
       `bounce_autopause_threshold=${String(fixedSettings.bounce_autopause_threshold)} (fixed)`,
+      `domain_level_rate_limit=${fixedSettings.domain_level_rate_limit ? "true" : "false"} (fixed)`,
       "ai_categorisation_options=applied (fixed)",
       "out_of_office_detection_settings=copied from source",
     ];
@@ -1045,6 +1059,8 @@ export class SmartleadClient {
     totalDuplicates: number;
     totalInvalid: number;
     totalUnsubscribed: number;
+    invalidEmails: Set<string>;
+    unsubscribedLeads: Set<string>;
     failedBatches: Lead[][];
   }> {
     const concurrency = CONCURRENCY_LIMITS.BATCH_UPLOADS;
@@ -1053,6 +1069,8 @@ export class SmartleadClient {
       totalDuplicates: 0,
       totalInvalid: 0,
       totalUnsubscribed: 0,
+      invalidEmails: new Set<string>(),
+      unsubscribedLeads: new Set<string>(),
       failedBatches: [] as Lead[][],
     };
 
@@ -1139,6 +1157,12 @@ export class SmartleadClient {
           results.totalDuplicates += response.duplicate_count || 0;
           results.totalInvalid += response.invalid_email_count || 0;
           results.totalUnsubscribed += response.unsubscribed_leads?.length || 0;
+          for (const email of response.invalid_emails ?? []) {
+            if (email) results.invalidEmails.add(String(email).toLowerCase());
+          }
+          for (const email of response.unsubscribed_leads ?? []) {
+            if (email) results.unsubscribedLeads.add(String(email).toLowerCase());
+          }
         } else if (
           result.status === "fulfilled" &&
           !result.value.success &&
@@ -1193,11 +1217,21 @@ export class SmartleadClient {
     );
 
     // Filter out leads that already exist
-    const newLeads = leads.filter(
+    const newLeadsRaw = leads.filter(
       (lead) => !existingEmails.has(lead.email.toLowerCase())
     );
 
-    const alreadyUploaded = leads.length - newLeads.length;
+    // De-dupe new leads by email (keeps first occurrence)
+    const newLeadsByEmail = new Map<string, Lead>();
+    for (const lead of newLeadsRaw) {
+      const email = lead.email?.toLowerCase().trim();
+      if (!email) continue;
+      if (!newLeadsByEmail.has(email)) newLeadsByEmail.set(email, lead);
+    }
+    const newLeads = Array.from(newLeadsByEmail.values());
+    const ledgerNewLeadEmails = Array.from(newLeadsByEmail.keys());
+
+    const alreadyUploaded = leads.length - newLeadsRaw.length;
     if (alreadyUploaded > 0) {
       console.log(`     ✓ ${alreadyUploaded} leads already in campaign, skipping`);
     }
@@ -1217,6 +1251,7 @@ export class SmartleadClient {
         is_lead_limit_exhausted: false,
         lead_import_stopped_count: 0,
         bounce_count: 0,
+        ledger_new_lead_emails: [],
         uploaded_count: 0,
         unsubscribed_count: 0,
       };
@@ -1261,6 +1296,8 @@ export class SmartleadClient {
       results.totalDuplicates += retryResults.totalDuplicates;
       results.totalInvalid += retryResults.totalInvalid;
       results.totalUnsubscribed += retryResults.totalUnsubscribed;
+      retryResults.invalidEmails.forEach((e) => results.invalidEmails.add(e));
+      retryResults.unsubscribedLeads.forEach((e) => results.unsubscribedLeads.add(e));
 
       if (retryResults.failedBatches.length > 0) {
         console.error(
@@ -1285,12 +1322,13 @@ export class SmartleadClient {
       block_count: 0,
       duplicate_count: results.totalDuplicates + alreadyUploaded,
       invalid_email_count: results.totalInvalid,
-      invalid_emails: [],
+      invalid_emails: Array.from(results.invalidEmails),
       already_added_to_campaign: alreadyUploaded,
-      unsubscribed_leads: [],
+      unsubscribed_leads: Array.from(results.unsubscribedLeads),
       is_lead_limit_exhausted: false,
       lead_import_stopped_count: 0,
       bounce_count: 0,
+      ledger_new_lead_emails: ledgerNewLeadEmails,
       uploaded_count: results.totalUploaded,
       unsubscribed_count: results.totalUnsubscribed,
     };

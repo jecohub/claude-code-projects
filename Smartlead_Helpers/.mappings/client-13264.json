@@ -1,0 +1,88 @@
+{
+  "clientId": "13264",
+  "mappings": [
+    {
+      "csvColumn": "Final Email",
+      "aliases": ["Email"],
+      "smartleadField": "email"
+    },
+    {
+      "csvColumn": "FO_FirstName",
+      "aliases": ["Final First Name"],
+      "smartleadField": "first_name"
+    },
+    {
+      "csvColumn": "last_name",
+      "smartleadField": "last_name"
+    },
+    {
+      "csvColumn": "Final Company Name",
+      "smartleadField": "company_name"
+    },
+    {
+      "csvColumn": "Final Website",
+      "smartleadField": "website"
+    },
+    {
+      "csvColumn": "LinkedIn Profile",
+      "smartleadField": "linkedin_profile"
+    },
+    {
+      "csvColumn": "Title",
+      "smartleadField": "custom",
+      "customFieldName": "Title"
+    },
+    {
+      "csvColumn": "phone_number",
+      "smartleadField": "custom",
+      "customFieldName": "phone_number"
+    },
+    {
+      "csvColumn": "City",
+      "smartleadField": "custom",
+      "customFieldName": "City"
+    },
+    {
+      "csvColumn": "State",
+      "smartleadField": "custom",
+      "customFieldName": "State"
+    },
+    {
+      "csvColumn": "Address",
+      "smartleadField": "custom",
+      "customFieldName": "Address"
+    },
+    {
+      "csvColumn": "Warehouse",
+      "smartleadField": "custom",
+      "customFieldName": "Warehouse"
+    },
+    {
+      "csvColumn": "Final Provider",
+      "aliases": ["Provider"],
+      "smartleadField": "custom",
+      "customFieldName": "Final_Provider"
+    },
+    {
+      "csvColumn": "Email Host",
+      "smartleadField": "custom",
+      "customFieldName": "Email_Host"
+    },
+    {
+      "csvColumn": "NAddress",
+      "smartleadField": "custom",
+      "customFieldName": "NAddress"
+    },
+    {
+      "csvColumn": "name",
+      "smartleadField": "custom",
+      "customFieldName": "name"
+    },
+    {
+      "csvColumn": "title",
+      "smartleadField": "custom",
+      "customFieldName": "title"
+    }
+  ],
+  "savedAt": "2026-01-16T10:00:00.000Z"
+}

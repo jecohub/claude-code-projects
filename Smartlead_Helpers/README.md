@@ -1,4 +1,23 @@
-# Smartlead Campaign Reporter
+# Smartlead_Helpers
+
+Automation helpers for Smartlead:
+
+1. **Reporting** — generate comprehensive client campaign reports (CLI + MCP server)
+2. **Bulk upload** — CSV → split → duplicate campaigns → upload leads (with retries + duplicate detection)
+
+**Start here:** `IMPLEMENTATION_GUIDE.md` (end-to-end overview + “how it works” for re-implementation).
+
+## Docs map
+
+- **`OVERVIEW.md`** — operator-first overview (what it does + how to run it) + developer code map
+- **`IMPLEMENTATION_GUIDE.md`** — full architecture + reporting + bulk upload + cloning details
+- **`GETTING-STARTED.md`** — bulk upload quickstart
+- **`UI-SETTINGS-CONFIG.md`** — UI-only settings (AI categorisation, bounce protection, OOO)
+- **`CAMPAIGN-SETTINGS-REFERENCE.md`** — what’s copyable via public API vs UI/GraphQL
+
+---
+
+## Reporting
 
 Two ways to generate comprehensive Smartlead campaign reports:
 
@@ -17,6 +36,10 @@ Both methods provide identical campaign analytics including lead status breakdow
    ```bash
    cp .env.example .env
    ```
+   If `.env.example` isn’t present, use:
+   ```bash
+   cp env.example .env
+   ```
 2. Install dependencies:
    ```bash
    npm install
@@ -25,6 +48,44 @@ Both methods provide identical campaign analytics including lead status breakdow
    ```bash
    npm run dev
    ```
+
+## Lead ledger (retargeting / “what have we already sent?”)
+
+Smartlead exports add system columns (status, IDs, timestamps, etc.), so they’re not a reliable “copy of what you uploaded”.
+
+This repo solves that by maintaining a **local SQLite lead ledger** as the source of truth:
+
+- Records **which emails** were uploaded to **which campaign** and **when**
+- Stores the **original CSV row JSON** so you can export a clean retarget CSV later
+
+### How it works
+- **Script-based uploads** (bulk upload): automatically logged after each campaign upload.
+- **Manual Smartlead UI uploads**: run a one-liner to record the same CSV you uploaded.
+
+### Commands
+```bash
+# 1) Initialize the DB (optional; auto-created on first write)
+npm run ledger:init
+
+# 1b) (Optional) Import your Smartlead client list (clientId → clientName) into the DB
+# Uses ./data/clients.tsv by default (tab-separated), if present.
+npm run ledger:clients
+
+# 2) Record a manual UI upload (keeps ledger complete when you upload in the Smartlead UI)
+npm run ledger:record -- --campaignId=2818135 --campaignName="My Campaign" --csv="/path/to/uploaded.csv"
+
+# 3) Export retarget-ready leads (default: 90 days since last upload)
+npm run ledger:export -- --days=90 --out="./exports/retarget.csv"
+
+# Optional: export only leads last uploaded under a specific Smartlead client
+npm run ledger:export -- --days=90 --clientId=128520 --out="./exports/retarget.csv"
+
+# Optional: export only leads last uploaded to a specific campaign
+npm run ledger:export -- --days=90 --campaignId=2818135 --out="./exports/retarget.csv"
+```
+
+### Config
+- Set `LEAD_LEDGER_DB_PATH` (optional). Default: `./data/lead-ledger.sqlite` (relative to `Smartlead_Helpers`).
 
 ## Standalone CLI Usage (No MCP Required)
 
@@ -123,8 +184,6 @@ The client uses `/client/{id}/leads` and `/campaigns` with `status` filters on t
   The script spawns `npm run dev`, waits for the server to announce its tool list, and then issues a one-shot `getClientStatus`. The response is logged as JSON (including `structuredContent` and the human-readable `content` text block).
 
 - You can also omit the `clientId` argument if you set `SMARTLEAD_CLIENT_ID` in your environment instead.
-
-## Project structure
 
 ## Project structure
 - `src/index.ts` — MCP server entry, registers the tool

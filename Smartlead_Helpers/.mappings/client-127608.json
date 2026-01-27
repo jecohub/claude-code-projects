@@ -1,0 +1,100 @@
+{
+  "clientId": "127608",
+  "mappings": [
+    {
+      "csvColumn": "FO_FirstName",
+      "smartleadField": "first_name"
+    },
+    {
+      "csvColumn": "Last Name",
+      "smartleadField": "last_name"
+    },
+    {
+      "csvColumn": "Final Email",
+      "smartleadField": "email"
+    },
+    {
+      "csvColumn": "Final Company Name",
+      "smartleadField": "company_name"
+    },
+    {
+      "csvColumn": "Final Website",
+      "smartleadField": "website"
+    },
+    {
+      "csvColumn": "LinkedIn Profile",
+      "smartleadField": "linkedin_profile"
+    },
+    {
+      "csvColumn": "Phone_Line",
+      "smartleadField": "custom",
+      "customFieldName": "Phone_Line"
+    },
+    {
+      "csvColumn": "Full Name",
+      "smartleadField": "custom",
+      "customFieldName": "Full_Name"
+    },
+    {
+      "csvColumn": "Job Title",
+      "smartleadField": "custom",
+      "customFieldName": "Job_Title"
+    },
+    {
+      "csvColumn": "Country",
+      "smartleadField": "custom",
+      "customFieldName": "Country"
+    },
+    {
+      "csvColumn": "Final Company Number",
+      "smartleadField": "custom",
+      "customFieldName": "Final_Company_Number"
+    },
+    {
+      "csvColumn": "Niche",
+      "smartleadField": "custom",
+      "customFieldName": "Niche"
+    },
+    {
+      "csvColumn": "Phone_Number_First_Line",
+      "smartleadField": "custom",
+      "customFieldName": "Phone_Number_First_Line"
+    },
+    {
+      "csvColumn": "Phone_Number_Second_Line",
+      "smartleadField": "custom",
+      "customFieldName": "Phone_Number_Second_Line"
+    },
+    {
+      "csvColumn": "Year_Founded_Line",
+      "smartleadField": "custom",
+      "customFieldName": "Year_Founded_Line"
+    },
+    {
+      "csvColumn": "City",
+      "smartleadField": "custom",
+      "customFieldName": "City"
+    },
+    {
+      "csvColumn": "State",
+      "smartleadField": "custom",
+      "customFieldName": "State"
+    },
+    {
+      "csvColumn": "Call_Time",
+      "smartleadField": "custom",
+      "customFieldName": "Call_Time"
+    },
+    {
+      "csvColumn": "Final Provider",
+      "smartleadField": "custom",
+      "customFieldName": "Final_Provider"
+    },
+    {
+      "csvColumn": "Email Host",
+      "smartleadField": "custom",
+      "customFieldName": "Email_Host"
+    }
+  ],
+  "savedAt": "2026-01-16T00:00:00.000Z"
+}

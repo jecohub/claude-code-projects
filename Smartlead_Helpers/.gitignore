@@ -4,3 +4,15 @@ dist/
 build/
 *.log
 .DS_Store
+
+# Local lead ledger (SQLite)
+data/lead-ledger.sqlite
+data/lead-ledger.sqlite-shm
+data/lead-ledger.sqlite-wal
+
+# Default exports folder (optional)
+exports/
+
+# Optional local client mapping import file
+data/clients.tsv
+data/clients.csv

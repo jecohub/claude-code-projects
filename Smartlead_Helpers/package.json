@@ -4,17 +4,24 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node --loader ts-node/esm src/index.ts",
+    "dev": "node --loader ts-node/esm src/mcp/index.ts",
     "local-call": "node --loader ts-node/esm scripts/local-call.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
+    "start": "node dist/mcp/index.js",
     "lint": "tsc --noEmit",
     "report": "node --loader ts-node/esm scripts/generate-report.ts",
     "report:json": "node --loader ts-node/esm scripts/generate-report.ts --format=json",
-    "analyze": "npx tsx scripts/analyze-campaign-success.ts"
+    "health": "npx tsx scripts/client-health.ts",
+    "analyze": "npx tsx scripts/analyze-campaign-success.ts",
+    "ledger:init": "node --loader ts-node/esm scripts/ledger-init.ts",
+    "ledger:record": "node --loader ts-node/esm scripts/ledger-record-upload.ts",
+    "ledger:export": "node --loader ts-node/esm scripts/ledger-export-retarget.ts",
+    "ledger:clients": "node --loader ts-node/esm scripts/ledger-import-clients.ts",
+    "bulk-copy-variant": "node --loader ts-node/esm scripts/bulk-copy-email-variant.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.25.1",
+    "better-sqlite3": "^11.6.0",
     "csv-parse": "^6.1.0",
     "dotenv": "^16.4.5",
     "p-limit": "^7.2.0",
@@ -22,6 +29,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.10.7",
+    "@types/better-sqlite3": "^7.6.12",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }

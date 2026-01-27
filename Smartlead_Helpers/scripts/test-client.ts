@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
-import { SmartleadClient } from "../src/smartleadClient.js";
-import { getConfig } from "../src/config.js";
+import { SmartleadClient } from "../src/core/smartleadClient.js";
+import { getConfig } from "../src/core/config.js";
 
 dotenv.config();
 

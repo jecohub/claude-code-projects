@@ -1,50 +1,20 @@
-import dotenv from "dotenv";
+import { getConfig } from "../src/core/config.js";
+import { SmartleadClient } from "../src/core/smartleadClient.js";
 
-dotenv.config();
+async function test() {
+  const config = getConfig();
+  const client = new SmartleadClient(config);
+  const campaignId = 2846779;
 
-const API_KEY = process.env.SMARTLEAD_API_KEY;
-const BASE_URL = process.env.SMARTLEAD_BASE_URL || "https://server.smartlead.ai/api/v1";
-const CLIENT_ID = process.argv[2] || process.env.SMARTLEAD_CLIENT_ID || "12659923";
+  // Check analytics endpoint for sequence breakdown
+  console.log("=== Campaign Analytics ===");
+  const analytics = await client.getCampaignAnalytics(campaignId);
+  console.log(JSON.stringify(analytics, null, 2));
 
-async function testEndpoint(name: string, url: string) {
-  console.log(`\n=== Testing ${name} ===`);
-  console.log(`URL: ${url}`);
-
-  try {
-    const response = await fetch(url);
-    console.log(`Status: ${response.status}`);
-
-    const text = await response.text();
-    console.log(`Response length: ${text.length} chars`);
-
-    try {
-      const json = JSON.parse(text);
-      console.log(`Parsed JSON:`, JSON.stringify(json, null, 2));
-    } catch {
-      console.log(`Raw response:`, text.substring(0, 500));
-    }
-  } catch (err) {
-    console.error(`Error:`, err);
-  }
+  // Check sequences endpoint
+  console.log("\n=== Campaign Sequences ===");
+  const sequences = await client.getCampaignSequences(campaignId);
+  console.log(JSON.stringify(sequences, null, 2));
 }
 
-async function main() {
-  console.log(`Client ID: ${CLIENT_ID}`);
-  console.log(`API Key: ${API_KEY?.substring(0, 20)}...`);
-
-  // Test campaigns endpoint
-  await testEndpoint(
-    "Campaigns (no filters)",
-    `${BASE_URL}/campaigns?api_key=${API_KEY}`
-  );
-
-  await testEndpoint(
-    "Campaigns (with client_id)",
-    `${BASE_URL}/campaigns?api_key=${API_KEY}&client_id=${CLIENT_ID}`
-  );
-
-  // Test a single campaign's leads if we find any
-  console.log("\nDone!");
-}
-
-main().catch(console.error);
+test().catch(console.error);
