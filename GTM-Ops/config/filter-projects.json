@@ -1,0 +1,29 @@
+{
+  "recho": {
+    "description": "Recho target personas",
+    "roles": [
+      "CEO", "Chief Executive Officer",
+      "COO", "Chief Operating Officer",
+      "CMO", "Chief Marketing Officer",
+      "CPO", "Chief Product Officer",
+      "VP Product", "VP of Product", "Product VP",
+      "AVP Product", "AVP of Product", "Product AVP",
+      "SVP Product", "SVP of Product", "Product SVP",
+      "President Product", "Product President",
+      "Head Product", "Head of Product", "Product Head",
+      "Director Product", "Director of Product", "Product Director",
+      "VP Marketing", "VP of Marketing", "Marketing VP",
+      "AVP Marketing", "AVP of Marketing", "Marketing AVP",
+      "SVP Marketing", "SVP of Marketing", "Marketing SVP",
+      "President Marketing", "Marketing President",
+      "Head Marketing", "Head of Marketing", "Marketing Head",
+      "Director Marketing", "Director of Marketing", "Marketing Director",
+      "VP Operations", "VP of Operations", "Operations VP",
+      "AVP Operations", "AVP of Operations", "Operations AVP",
+      "SVP Operations", "SVP of Operations", "Operations SVP",
+      "President Operations", "Operations President",
+      "Head Operations", "Head of Operations", "Operations Head",
+      "Director Operations", "Director of Operations", "Operations Director"
+    ]
+  }
+}
