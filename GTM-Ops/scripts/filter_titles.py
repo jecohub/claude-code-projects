@@ -1,6 +1,7 @@
 import csv
 import json
 import os
+import re
 import sys
 import argparse
 from openai import OpenAI
@@ -24,7 +25,9 @@ def load_project_config(project_name: str) -> dict:
 def strict_match(title: str, roles: list[str]) -> bool:
     title_lower = title.strip().lower()
     for role in roles:
-        if role.strip().lower() in title_lower:
+        role_lower = role.strip().lower()
+        pattern = r'\b' + re.escape(role_lower) + r'\b'
+        if re.search(pattern, title_lower):
             return True
     return False
 
