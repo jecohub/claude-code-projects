@@ -13,6 +13,9 @@ data/lead-ledger.sqlite-wal
 # Default exports folder (optional)
 exports/
 
+# Git worktrees
+.worktrees/
+
 # Optional local client mapping import file
 data/clients.tsv
 data/clients.csv
