@@ -245,6 +245,101 @@ export class SmartleadClient {
   }
 
   /**
+   * Get all email accounts belonging to a client
+   */
+  async getClientEmailAccounts(clientId: string): Promise<EmailAccount[]> {
+    try {
+      const params = new URLSearchParams({ client_id: clientId });
+      const body = await this.getJson<EmailAccount[] | unknown>(
+        `/email-accounts`,
+        params,
+      );
+      return Array.isArray(body) ? body : [];
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Get warmup reputation score (0–100) for an email account.
+   * Returns -1 if unavailable.
+   */
+  async getEmailAccountWarmupStats(accountId: number): Promise<number> {
+    try {
+      const body = await this.getJson<{ warmup_reputation?: number; reputation?: number } | unknown>(
+        `/email-accounts/${accountId}/warmup-stats`,
+        new URLSearchParams(),
+      );
+      if (body && typeof body === 'object') {
+        const b = body as Record<string, unknown>;
+        const rep = b['warmup_reputation'] ?? b['reputation'];
+        if (typeof rep === 'number') return rep;
+      }
+      return -1;
+    } catch {
+      return -1;
+    }
+  }
+
+  /**
+   * Add email accounts to a campaign (bulk)
+   */
+  async addEmailAccountsToCampaign(
+    campaignId: number,
+    emailAccountIds: number[],
+  ): Promise<boolean> {
+    try {
+      await this.postJson(
+        `/campaigns/${campaignId}/email-accounts`,
+        { email_account_ids: emailAccountIds },
+      );
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Remove email accounts from a campaign (bulk)
+   */
+  async removeEmailAccountsFromCampaign(
+    campaignId: number,
+    emailAccountIds: number[],
+  ): Promise<boolean> {
+    await this.campaignRateLimiter.throttle();
+    const url = `${this.baseUrl}/campaigns/${campaignId}/email-accounts?api_key=${this.apiKey}`;
+    try {
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email_account_ids: emailAccountIds }),
+        signal: withTimeout(this.timeoutMs),
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Set campaign status to ACTIVE or PAUSED
+   */
+  async updateCampaignStatus(
+    campaignId: number,
+    status: 'ACTIVE' | 'PAUSED',
+  ): Promise<boolean> {
+    try {
+      await this.postJson(
+        `/campaigns/${campaignId}/update-status`,
+        { status },
+      );
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Get all leads from a campaign with PARALLEL pagination
    * Used for duplicate detection before uploading
    */
@@ -413,6 +508,23 @@ export class SmartleadClient {
     }
 
     return categorization;
+  }
+
+  /**
+   * Delete a single lead from a campaign
+   * Uses campaign operations rate limiter
+   */
+  async deleteLeadFromCampaign(
+    campaignId: number,
+    leadId: number
+  ): Promise<{ ok: boolean; status: number }> {
+    await this.campaignRateLimiter.throttle();
+    const url = `${this.baseUrl}/campaigns/${campaignId}/leads/${leadId}?api_key=${this.apiKey}`;
+    const response = await fetch(url, {
+      method: "DELETE",
+      signal: withTimeout(this.timeoutMs),
+    });
+    return { ok: response.ok, status: response.status };
   }
 
   async getCampaignReport(
