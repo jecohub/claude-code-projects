@@ -121,12 +121,12 @@ const mailboxSwapSchema = z.object({
   fromDate: z
     .string()
     .min(1, "fromDate is required")
-    .regex(/^\d{4}-\d{2}-\d{2}/, "fromDate must be an ISO date string (e.g. '2025-12-01')")
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "fromDate must be an ISO date string (e.g. '2025-12-01')")
     .describe("ISO date string — only affect campaigns created on or after this date (e.g. '2025-12-01')"),
   toDate: z
     .string()
     .min(1, "toDate is required")
-    .regex(/^\d{4}-\d{2}-\d{2}/, "toDate must be an ISO date string (e.g. '2026-01-15')")
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "toDate must be an ISO date string (e.g. '2026-01-15')")
     .describe("ISO date string — only affect campaigns created on or before this date (e.g. '2026-01-15')"),
   minReputation: z
     .number()
