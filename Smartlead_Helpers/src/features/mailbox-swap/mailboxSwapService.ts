@@ -72,6 +72,7 @@ export class MailboxSwapService {
     const allCampaigns = await this.client.listCampaigns(clientId, { pageSize: 1000 });
     const from = new Date(fromDate);
     const to = new Date(toDate);
+    to.setUTCHours(23, 59, 59, 999);
 
     const targetCampaigns = (allCampaigns.items as Array<{ id: number; name: string; status: string; created_at: string }>)
       .filter((c) => {
@@ -106,7 +107,7 @@ export class MailboxSwapService {
           newMailboxCount: qualifiedIds.length,
           action,
           status: 'success',
-          activated: false,
+          activated: activateCampaigns,
           errors: [],
         });
         continue;
