@@ -326,6 +326,7 @@ export interface CampaignUploadResult {
   totalLeads: number;
   uploadedLeads: number;
   failedLeads: number;
+  verifiedLeadCount?: number;
   errors: string[];
 }
 
@@ -337,6 +338,7 @@ export interface BulkUploadResult {
     totalLeadsProcessed: number;
     totalLeadsUploaded: number;
     totalLeadsFailed: number;
+    totalLeadsVerified?: number;
     campaignsCreated: number;
   };
   errors: string[];
@@ -581,3 +583,57 @@ export interface CampaignHealth {
   message?: string; // For edge cases like "No active campaigns"
 }
 
+// ========================================
+// Mailbox Swap Types
+// ========================================
+
+export interface MailboxSwapParams {
+  csvFilePath: string;
+  clientId: string;
+  fromDate: string;          // ISO date string
+  toDate: string;            // ISO date string
+  minReputation: number;
+  maxReputation: number;
+  activateCampaigns?: boolean;      // default false
+  removeExistingMailboxes?: boolean; // default true
+  dryRun?: boolean;                  // default true
+}
+
+export type CampaignSwapStatus = 'success' | 'partial_failure' | 'skipped';
+
+export interface CampaignSwapResult {
+  campaignId: number;
+  campaignName: string;
+  createdAt: string;
+  existingMailboxCount: number;
+  newMailboxCount: number;
+  action: string;            // human-readable: "Replace (remove 3, add 18)" etc.
+  status: CampaignSwapStatus;
+  activated: boolean;
+  errors: string[];
+}
+
+export interface MailboxSwapReport {
+  dryRun: boolean;
+  clientId: string;
+  fromDate: string;
+  toDate: string;
+  reputationRange: { min: number; max: number };
+  activateCampaigns: boolean;
+  removeExistingMailboxes: boolean;
+  mailboxStats: {
+    totalInCsv: number;
+    foundInAccount: number;
+    qualified: number;
+    filteredOut: number;
+  };
+  campaignStats: {
+    pausedInRange: number;
+  };
+  campaigns: CampaignSwapResult[];
+  summary: {
+    fullySucceeded: number;
+    partiallyFailed: number;
+    notTouched: number;
+  };
+}
