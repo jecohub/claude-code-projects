@@ -317,7 +317,8 @@ export class SmartleadClient {
         signal: withTimeout(this.timeoutMs),
       });
       return response.ok;
-    } catch {
+    } catch (error) {
+      console.error(`removeEmailAccountsFromCampaign(${campaignId}) failed:`, error);
       return false;
     }
   }
