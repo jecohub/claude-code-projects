@@ -13,6 +13,7 @@ import {
   findUnmappedColumns,
   FieldMapping,
 } from "../features/bulk-upload/utils/mappingStorage.js";
+import { MailboxSwapService } from "../features/mailbox-swap/index.js";
 
 const clientStatusSchema = z.object({
   clientId: z
@@ -108,10 +109,51 @@ const saveMappingSchema = z.object({
 });
 type SaveMappingInput = z.infer<typeof saveMappingSchema>;
 
+const mailboxSwapSchema = z.object({
+  csvFilePath: z
+    .string()
+    .describe("Absolute path to a CSV file containing one column of mailbox email addresses")
+    .min(1, "csvFilePath is required"),
+  clientId: z
+    .string()
+    .describe("Smartlead client ID")
+    .min(1, "clientId is required"),
+  fromDate: z
+    .string()
+    .describe("ISO date string — only affect campaigns created on or after this date (e.g. '2025-12-01')"),
+  toDate: z
+    .string()
+    .describe("ISO date string — only affect campaigns created on or before this date (e.g. '2026-01-15')"),
+  minReputation: z
+    .number()
+    .describe("Minimum warmup reputation score (0–100, inclusive)")
+    .min(0)
+    .max(100),
+  maxReputation: z
+    .number()
+    .describe("Maximum warmup reputation score (0–100, inclusive)")
+    .min(0)
+    .max(100),
+  activateCampaigns: z
+    .boolean()
+    .optional()
+    .describe("If true, set each successfully-swapped campaign to ACTIVE (default: false)"),
+  removeExistingMailboxes: z
+    .boolean()
+    .optional()
+    .describe("If false, existing mailboxes are kept and new ones are added on top (default: true)"),
+  dryRun: z
+    .boolean()
+    .optional()
+    .describe("If true, preview only — no changes written to Smartlead (default: true)"),
+});
+type MailboxSwapInput = z.infer<typeof mailboxSwapSchema>;
+
 async function main() {
   const config = getConfig();
   const client = new SmartleadClient(config);
   const bulkUploadService = new BulkUploadService(client);
+  const mailboxSwapService = new MailboxSwapService(client);
 
   const server = new McpServer({
     name: "smartlead-mcp",
@@ -517,6 +559,92 @@ async function main() {
             text,
           },
         ],
+      };
+    },
+  );
+
+  server.registerTool(
+    "swapCampaignMailboxes",
+    {
+      title: "Swap campaign mailboxes",
+      description:
+        "Replace or augment email accounts on paused Smartlead campaigns. " +
+        "Reads a CSV of mailbox email addresses, filters by warmup reputation, " +
+        "then assigns them to matching campaigns. Use dryRun: true (default) to preview before executing.",
+      inputSchema: mailboxSwapSchema,
+    },
+    async (args: MailboxSwapInput, _extra: unknown) => {
+      const report = await mailboxSwapService.execute({
+        csvFilePath: args.csvFilePath,
+        clientId: args.clientId,
+        fromDate: args.fromDate,
+        toDate: args.toDate,
+        minReputation: args.minReputation,
+        maxReputation: args.maxReputation,
+        activateCampaigns: args.activateCampaigns,
+        removeExistingMailboxes: args.removeExistingMailboxes,
+        dryRun: args.dryRun,
+      });
+
+      const lines: string[] = [];
+      const mode = report.dryRun ? 'DRY RUN' : 'EXECUTED';
+
+      lines.push(`========================================`);
+      lines.push(`MAILBOX SWAP [${mode}]`);
+      lines.push(`========================================`);
+      lines.push(`Client:              ${report.clientId}`);
+      lines.push(`Date range:          ${report.fromDate} → ${report.toDate}`);
+      lines.push(`Reputation range:    ${report.reputationRange.min}–${report.reputationRange.max}`);
+      lines.push(`Activate:            ${report.activateCampaigns ? 'Yes' : 'No'}`);
+      lines.push(`Remove existing:     ${report.removeExistingMailboxes ? 'Yes' : 'No'}`);
+      lines.push(``);
+      lines.push(`MAILBOXES (from CSV)`);
+      lines.push(`  Total in CSV:       ${report.mailboxStats.totalInCsv}`);
+      lines.push(`  Found in account:   ${report.mailboxStats.foundInAccount}`);
+      lines.push(`  Qualified (${report.reputationRange.min}–${report.reputationRange.max}): ${report.mailboxStats.qualified}`);
+      lines.push(`  Filtered out:       ${report.mailboxStats.filteredOut}`);
+      lines.push(``);
+      lines.push(`CAMPAIGNS FOUND`);
+      lines.push(`  Paused in range:    ${report.campaignStats.pausedInRange}`);
+
+      if (report.campaigns.length > 0) {
+        lines.push(``);
+        lines.push(`CAMPAIGN DETAILS`);
+        for (const c of report.campaigns) {
+          lines.push(`  [ID ${c.campaignId}] "${c.campaignName}"`);
+          lines.push(`    Created:             ${new Date(c.createdAt).toLocaleDateString()}`);
+          lines.push(`    Existing mailboxes:  ${c.existingMailboxCount}`);
+          lines.push(`    New mailboxes:       ${c.newMailboxCount}`);
+          lines.push(`    Action:              ${c.action}`);
+          if (report.activateCampaigns) {
+            lines.push(`    Status:              ${c.activated ? 'PAUSED → ACTIVE' : 'PAUSED (no change)'}`);
+          }
+          const resultIcon = c.status === 'success' ? '✅' : '⚠️';
+          const resultLabel = c.status === 'success'
+            ? (report.dryRun ? 'Would succeed' : 'Success')
+            : 'PARTIAL FAILURE';
+          lines.push(`    Result:              ${resultIcon} ${resultLabel}`);
+          if (c.errors.length > 0) {
+            lines.push(`    Errors:`);
+            c.errors.forEach((e) => lines.push(`      - ${e}`));
+          }
+        }
+      }
+
+      lines.push(``);
+      lines.push(`========================================`);
+      lines.push(`SUMMARY`);
+      lines.push(`  Campaigns fully succeeded:    ${report.summary.fullySucceeded}`);
+      lines.push(`  Campaigns partially failed:   ${report.summary.partiallyFailed}`);
+      lines.push(`  Campaigns not touched:        ${report.summary.notTouched}`);
+      lines.push(`========================================`);
+      if (report.dryRun) {
+        lines.push(`[DRY RUN — re-run with dryRun: false to execute]`);
+      }
+
+      return {
+        structuredContent: { ...report } as Record<string, unknown>,
+        content: [{ type: "text", text: lines.join('\n') }],
       };
     },
   );
