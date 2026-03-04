@@ -120,9 +120,13 @@ const mailboxSwapSchema = z.object({
     .min(1, "clientId is required"),
   fromDate: z
     .string()
+    .min(1, "fromDate is required")
+    .regex(/^\d{4}-\d{2}-\d{2}/, "fromDate must be an ISO date string (e.g. '2025-12-01')")
     .describe("ISO date string — only affect campaigns created on or after this date (e.g. '2025-12-01')"),
   toDate: z
     .string()
+    .min(1, "toDate is required")
+    .regex(/^\d{4}-\d{2}-\d{2}/, "toDate must be an ISO date string (e.g. '2026-01-15')")
     .describe("ISO date string — only affect campaigns created on or before this date (e.g. '2026-01-15')"),
   minReputation: z
     .number()
@@ -146,7 +150,13 @@ const mailboxSwapSchema = z.object({
     .boolean()
     .optional()
     .describe("If true, preview only — no changes written to Smartlead (default: true)"),
-});
+}).refine(
+  (data) => data.minReputation <= data.maxReputation,
+  {
+    message: "minReputation must be less than or equal to maxReputation",
+    path: ["minReputation"],
+  }
+);
 type MailboxSwapInput = z.infer<typeof mailboxSwapSchema>;
 
 async function main() {
@@ -574,17 +584,26 @@ async function main() {
       inputSchema: mailboxSwapSchema,
     },
     async (args: MailboxSwapInput, _extra: unknown) => {
-      const report = await mailboxSwapService.execute({
-        csvFilePath: args.csvFilePath,
-        clientId: args.clientId,
-        fromDate: args.fromDate,
-        toDate: args.toDate,
-        minReputation: args.minReputation,
-        maxReputation: args.maxReputation,
-        activateCampaigns: args.activateCampaigns,
-        removeExistingMailboxes: args.removeExistingMailboxes,
-        dryRun: args.dryRun,
-      });
+      let report;
+      try {
+        report = await mailboxSwapService.execute({
+          csvFilePath: args.csvFilePath,
+          clientId: args.clientId,
+          fromDate: args.fromDate,
+          toDate: args.toDate,
+          minReputation: args.minReputation,
+          maxReputation: args.maxReputation,
+          activateCampaigns: args.activateCampaigns,
+          removeExistingMailboxes: args.removeExistingMailboxes,
+          dryRun: args.dryRun,
+        });
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        return {
+          structuredContent: { error: message } as Record<string, unknown>,
+          content: [{ type: "text", text: `MAILBOX SWAP ERROR: ${message}` }],
+        };
+      }
 
       const lines: string[] = [];
       const mode = report.dryRun ? 'DRY RUN' : 'EXECUTED';
