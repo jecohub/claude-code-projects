@@ -294,7 +294,8 @@ export class SmartleadClient {
         { email_account_ids: emailAccountIds },
       );
       return true;
-    } catch {
+    } catch (error) {
+      console.error(`addEmailAccountsToCampaign(${campaignId}) failed:`, error);
       return false;
     }
   }
@@ -307,7 +308,7 @@ export class SmartleadClient {
     emailAccountIds: number[],
   ): Promise<boolean> {
     await this.campaignRateLimiter.throttle();
-    const url = `${this.baseUrl}/campaigns/${campaignId}/email-accounts?api_key=${this.apiKey}`;
+    const url = this.buildUrl(`/campaigns/${campaignId}/email-accounts`);
     try {
       const response = await fetch(url, {
         method: 'DELETE',
@@ -334,7 +335,8 @@ export class SmartleadClient {
         { status },
       );
       return true;
-    } catch {
+    } catch (error) {
+      console.error(`updateCampaignStatus(${campaignId}, ${status}) failed:`, error);
       return false;
     }
   }
