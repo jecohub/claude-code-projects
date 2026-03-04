@@ -36,6 +36,13 @@ export class MailboxSwapService {
       .map((email) => accountByEmail.get(email.toLowerCase()))
       .filter((a): a is NonNullable<typeof a> => a !== undefined);
 
+    const notFoundEmails = csvEmails.filter(
+      (email) => !accountByEmail.has(email.toLowerCase())
+    );
+    for (const email of notFoundEmails) {
+      console.warn(`[mailbox-swap] Email not found in Smartlead account: ${email}`);
+    }
+
     // ── Step 3: Filter by warmup reputation ─────────────────────────────
     const reputationResults = await Promise.all(
       foundAccounts.map(async (account) => {
@@ -99,7 +106,7 @@ export class MailboxSwapService {
           newMailboxCount: qualifiedIds.length,
           action,
           status: 'success',
-          activated: activateCampaigns,
+          activated: false,
           errors: [],
         });
         continue;
