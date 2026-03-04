@@ -17,8 +17,9 @@ Add a new MCP tool `swap-campaign-mailboxes` that replaces all email accounts (m
 | `toDate`           | string  | yes      | —       | ISO date string — only affect campaigns with `created_at <= toDate` |
 | `minReputation`    | number  | yes      | —       | Minimum warmup reputation score (0–100, inclusive) |
 | `maxReputation`    | number  | yes      | —       | Maximum warmup reputation score (0–100, inclusive) |
-| `activateCampaigns`| boolean | no       | false   | If true, set each successfully-swapped campaign status to ACTIVE |
-| `dryRun`           | boolean | no       | true    | If true, preview only — no changes are written to Smartlead |
+| `activateCampaigns`       | boolean | no       | false   | If true, set each successfully-swapped campaign status to ACTIVE |
+| `removeExistingMailboxes` | boolean | no       | true    | If false, existing mailboxes are kept and new ones are added on top |
+| `dryRun`                  | boolean | no       | true    | If true, preview only — no changes are written to Smartlead |
 
 ## Architecture
 
@@ -63,7 +64,10 @@ src/features/mailbox-swap/
 
 5. For each campaign (dry run: plan only; live: execute):
    a. Fetch current email accounts
-   b. Remove all current email accounts
+   b. If removeExistingMailboxes === true AND existing accounts > 0:
+        → Remove all current email accounts
+      Else:
+        → Skip removal, keep existing
    c. Add all qualified mailboxes
    d. If activateCampaigns === true AND swap succeeded: set status to ACTIVE
 
@@ -76,10 +80,11 @@ src/features/mailbox-swap/
 ========================================
 MAILBOX SWAP [DRY RUN | EXECUTED]
 ========================================
-Client:           12345
-Date range:       2025-12-01 → 2026-01-15
-Reputation range: 80–100
-Activate:         No
+Client:              12345
+Date range:          2025-12-01 → 2026-01-15
+Reputation range:    80–100
+Activate:            No
+Remove existing:     Yes
 
 MAILBOXES (from CSV)
   Total in CSV:       25
@@ -93,22 +98,25 @@ CAMPAIGNS FOUND
 CAMPAIGN DETAILS
   [ID 98765] "Swayyem - Q1 Wave 1"
     Created:             2025-12-10
-    Previous mailboxes:  3
+    Existing mailboxes:  3
     New mailboxes:       18
+    Action:              Replace (remove 3, add 18)
     Status:              PAUSED (no change)
     Result:              ✅ Success
 
   [ID 99001] "Swayyem - Q1 Wave 2"
     Created:             2025-12-14
-    Previous mailboxes:  5
+    Existing mailboxes:  0
     New mailboxes:       18
+    Action:              Add 18
     Status:              PAUSED → ACTIVE
     Result:              ✅ Success
 
   [ID 99050] "Swayyem - Q1 Wave 3"
     Created:             2025-12-20
-    Previous mailboxes:  3
+    Existing mailboxes:  3
     New mailboxes:       18
+    Action:              Add 18 (keep 3 existing)
     Status:              PAUSED (no change)
     Result:              ⚠️ PARTIAL FAILURE — added 12/18 accounts (see errors)
     Errors:
