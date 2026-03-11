@@ -7,6 +7,7 @@
     },
     {
       "csvColumn": "Last Name",
+      "aliases": ["*Last Name"],
       "smartleadField": "last_name"
     },
     {
@@ -19,15 +20,18 @@
     },
     {
       "csvColumn": "Final Website",
+      "aliases": ["*Final Website"],
       "smartleadField": "website"
     },
     {
       "csvColumn": "Full Name",
+      "aliases": ["*Full Name"],
       "smartleadField": "custom",
       "customFieldName": "Full_Name"
     },
     {
       "csvColumn": "Final Industry",
+      "aliases": ["*Final Industry"],
       "smartleadField": "custom",
       "customFieldName": "Final_Industry"
     },

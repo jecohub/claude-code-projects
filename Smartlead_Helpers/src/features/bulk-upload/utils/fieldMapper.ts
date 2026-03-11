@@ -142,7 +142,9 @@ export function mapCSVRowToLead(
       const value = findColumnValue(row, mapping);
       if (!value) continue;
 
-      if (mapping.smartleadField === "custom") {
+      if (mapping.smartleadField === "skip") {
+        // Intentionally ignored
+      } else if (mapping.smartleadField === "custom") {
         customFields[mapping.customFieldName || mapping.csvColumn] = value;
       } else {
         lead[mapping.smartleadField] = value;

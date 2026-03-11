@@ -1,7 +1,17 @@
-import { getConfig } from "./src/config.js";
+import { getConfig } from "../../src/core/config.js";
 
 const campaignsToDelete = [
-  2856395  // Empty campaign after lead transfer
+  2992705,
+  2992706,
+  2992708,
+  2992707,
+  2992710,
+  2992709,
+  2992712,
+  2992711,
+  2992713,
+  2992714,
+  2992715,
 ];
 
 async function deleteCampaign(campaignId: number, apiKey: string): Promise<boolean> {

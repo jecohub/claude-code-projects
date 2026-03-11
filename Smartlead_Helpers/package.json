@@ -17,7 +17,8 @@
     "ledger:record": "node --loader ts-node/esm scripts/ledger-record-upload.ts",
     "ledger:export": "node --loader ts-node/esm scripts/ledger-export-retarget.ts",
     "ledger:clients": "node --loader ts-node/esm scripts/ledger-import-clients.ts",
-    "bulk-copy-variant": "node --loader ts-node/esm scripts/bulk-copy-email-variant.ts"
+    "bulk-copy-variant": "node --loader ts-node/esm scripts/bulk-copy-email-variant.ts",
+    "combine-storeleads": "node --loader ts-node/esm scripts/combine-storeleads-csvs.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.25.1",

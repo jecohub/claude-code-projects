@@ -30,5 +30,13 @@ build/
 *.xlsx
 *.xls
 
+# Environment variables
+.env
+
 # Logs
 *.log
+upload-log.txt
+
+# Client data / reports
+Smartlead_Helpers/reports/
+Clay_Helpers/data/

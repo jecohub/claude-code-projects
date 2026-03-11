@@ -550,6 +550,12 @@ export interface EmailAccount {
   from_email: string;
   is_smtp_success: boolean;
   type: string; // GMAIL, SMTP, ZOHO, OUTLOOK
+  warmup_details?: {
+    status: string;
+    warmup_reputation: string; // e.g. "97%" or "100%"
+    reply_rate?: number;
+    blocked_reason?: string | null;
+  };
 }
 
 export interface CampaignHealth {

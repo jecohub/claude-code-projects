@@ -1,0 +1,11 @@
+{
+  "name": "clay-helpers",
+  "version": "1.0.0",
+  "description": "Tools and utilities for working with Clay.com tables and workflows",
+  "type": "module",
+  "scripts": {
+    "analyze": "node scripts/analyze-table.js"
+  },
+  "keywords": ["clay", "gtm", "enrichment", "automation"],
+  "license": "MIT"
+}

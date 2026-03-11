@@ -62,6 +62,21 @@
       "customFieldName": "Title"
     },
     {
+      "csvColumn": "Final Title",
+      "smartleadField": "custom",
+      "customFieldName": "Final_Title"
+    },
+    {
+      "csvColumn": "Solution",
+      "smartleadField": "custom",
+      "customFieldName": "Solution"
+    },
+    {
+      "csvColumn": "Competitors",
+      "smartleadField": "custom",
+      "customFieldName": "Competitors"
+    },
+    {
       "csvColumn": "Final Provider",
       "smartleadField": "custom",
       "customFieldName": "Final_Provider"
@@ -74,7 +89,12 @@
       "csvColumn": "Email Host",
       "smartleadField": "custom",
       "customFieldName": "Email_Host"
+    },
+    {
+      "csvColumn": "Company Address",
+      "smartleadField": "custom",
+      "customFieldName": "Company_Address"
     }
   ],
-  "savedAt": "2026-01-09T00:00:00.000Z"
+  "savedAt": "2026-02-04T00:00:00.000Z"
 }

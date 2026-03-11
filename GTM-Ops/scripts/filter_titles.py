@@ -131,6 +131,19 @@ def main():
     parser.add_argument("file", help="Path to the CSV file")
     parser.add_argument("--column", required=True, help="Name of the title/role column")
     parser.add_argument("--project", required=True, help="Project key from config")
+    parser.add_argument(
+        "--no-ai",
+        action="store_true",
+        help="Disable AI fuzzy matching and use strict matching only",
+    )
+    parser.add_argument(
+        "--blocklist",
+        action="store_true",
+        help=(
+            "Treat project roles as a junior/irrelevant blocklist and REMOVE rows whose "
+            "titles match, keeping everything else"
+        ),
+    )
     args = parser.parse_args()
 
     # Validate file exists
@@ -142,10 +155,13 @@ def main():
     project = load_project_config(args.project)
     roles = project["roles"]
 
-    # Check API key
+    # Check API key (only required if AI matching is enabled and not using blocklist mode)
     api_key = os.environ.get("OPENAI_API_KEY")
-    if not api_key:
-        print("Error: OPENAI_API_KEY environment variable not set.")
+    if not args.no_ai and not args.blocklist and not api_key:
+        print(
+            "Error: OPENAI_API_KEY environment variable not set. Either set it or run with "
+            "--no-ai or --blocklist to avoid AI matching."
+        )
         sys.exit(1)
 
     # Read CSV
@@ -178,13 +194,13 @@ def main():
             strict_unmatched.append(title)
     print(f"Strict match: {len(strict_matched)} matched, {len(strict_unmatched)} unmatched")
 
-    # Phase 2: AI matching on unmatched titles
+    # Phase 2: AI matching on unmatched titles (optional, and skipped for blocklist mode)
     ai_matched = set()
     total_cost = 0
     total_input_tokens = 0
     total_output_tokens = 0
 
-    if strict_unmatched:
+    if strict_unmatched and not args.no_ai and not args.blocklist:
         print(f"Sending {len(strict_unmatched)} titles to gpt-4o-mini for classification...")
         ai_results, total_cost, total_input_tokens, total_output_tokens = classify_titles_with_ai(
             strict_unmatched, roles, api_key
@@ -201,8 +217,14 @@ def main():
     filtered_rows = []
     for row in rows:
         title = row[args.column].strip()
-        if title in all_matched:
-            filtered_rows.append(row)
+        if args.blocklist:
+            # In blocklist mode, REMOVE rows whose title matches the blocklist (all_matched)
+            if title not in all_matched:
+                filtered_rows.append(row)
+        else:
+            # Default behavior: KEEP rows whose title matches allowed roles (all_matched)
+            if title in all_matched:
+                filtered_rows.append(row)
 
     # Write output
     base, ext = os.path.splitext(args.file)
@@ -223,7 +245,7 @@ def main():
     print(f"Total matches:     {len(all_matched)}")
     print(f"Rows kept:         {len(filtered_rows)}")
     print(f"Rows filtered out: {total_rows - len(filtered_rows)}")
-    if strict_unmatched:
+    if strict_unmatched and not args.no_ai:
         print(f"API cost:          ${total_cost:.4f}")
         print(f"Tokens used:       {total_input_tokens} in / {total_output_tokens} out")
     print(f"Output saved to:   {output_path}")

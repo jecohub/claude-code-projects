@@ -321,6 +321,28 @@ export class BulkUploadService {
         }
       }
 
+      // PHASE 3: Verify actual lead counts in each campaign
+      console.log("\n=== PHASE 3: VERIFYING UPLOADS ===\n");
+
+      let totalLeadsVerified = 0;
+      for (const result of campaignResults) {
+        if (result.campaignId <= 0) continue;
+        try {
+          const actualLeads = await this.client.getCampaignLeads(result.campaignId);
+          result.verifiedLeadCount = actualLeads.length;
+          totalLeadsVerified += actualLeads.length;
+          const match = actualLeads.length === result.uploadedLeads;
+          const icon = match ? "✓" : "⚠️";
+          console.log(
+            `  ${icon} Campaign ${result.campaignId}: ${actualLeads.length} verified` +
+            (match ? "" : ` (API reported ${result.uploadedLeads})`)
+          );
+        } catch (error) {
+          const msg = error instanceof Error ? error.message : String(error);
+          console.warn(`  ⚠️  Could not verify campaign ${result.campaignId}: ${msg}`);
+        }
+      }
+
       // Log performance statistics
       console.log("\n=== PERFORMANCE STATISTICS ===");
       const stats = this.client.getRateLimiterStats();
@@ -342,6 +364,7 @@ export class BulkUploadService {
           totalLeadsProcessed,
           totalLeadsUploaded,
           totalLeadsFailed,
+          totalLeadsVerified,
           campaignsCreated,
         },
         errors,

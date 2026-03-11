@@ -262,11 +262,15 @@ export class SmartleadClient {
 
   /**
    * Get warmup reputation score (0–100) for an email account.
+   * NOTE: The authoritative reputation is warmup_details.warmup_reputation
+   * on the email account object returned by getClientEmailAccounts().
+   * This endpoint only returns raw stats (inbox_count, spam_count, etc.)
+   * and does not include the computed reputation percentage.
    * Returns -1 if unavailable.
    */
   async getEmailAccountWarmupStats(accountId: number): Promise<number> {
     try {
-      const body = await this.getJson<{ warmup_reputation?: number; reputation?: number } | unknown>(
+      const body = await this.getJson<Record<string, unknown> | unknown>(
         `/email-accounts/${accountId}/warmup-stats`,
         new URLSearchParams(),
       );
@@ -274,6 +278,10 @@ export class SmartleadClient {
         const b = body as Record<string, unknown>;
         const rep = b['warmup_reputation'] ?? b['reputation'];
         if (typeof rep === 'number') return rep;
+        if (typeof rep === 'string') {
+          const n = parseFloat((rep as string).replace('%', ''));
+          if (!isNaN(n)) return n;
+        }
       }
       return -1;
     } catch {

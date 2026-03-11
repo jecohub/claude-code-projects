@@ -25,6 +25,7 @@
     },
     {
       "csvColumn": "LinkedIn Profile",
+      "aliases": ["LinkedIn"],
       "smartleadField": "linkedin_profile"
     },
     {
@@ -59,7 +60,7 @@
     },
     {
       "csvColumn": "Final Provider",
-      "aliases": ["Provider"],
+      "aliases": ["Provider", "Final_Provider"],
       "smartleadField": "custom",
       "customFieldName": "Final_Provider"
     },
@@ -74,7 +75,13 @@
       "customFieldName": "NAddress"
     },
     {
+      "csvColumn": "Full_Name",
+      "smartleadField": "custom",
+      "customFieldName": "Full_Name"
+    },
+    {
       "csvColumn": "name",
+      "aliases": ["Name"],
       "smartleadField": "custom",
       "customFieldName": "name"
     },
@@ -82,6 +89,16 @@
       "csvColumn": "title",
       "smartleadField": "custom",
       "customFieldName": "title"
+    },
+    {
+      "csvColumn": "country",
+      "smartleadField": "custom",
+      "customFieldName": "country"
+    },
+    {
+      "csvColumn": "Commercial?",
+      "smartleadField": "custom",
+      "customFieldName": "Commercial"
     }
   ],
   "savedAt": "2026-01-16T10:00:00.000Z"

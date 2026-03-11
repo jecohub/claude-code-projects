@@ -118,19 +118,6 @@ export function groupLeadsByType(
 }
 
 /**
- * Split an array into chunks of maximum size
- */
-function chunkArray<T>(array: T[], maxSize: number): T[][] {
-  const chunks: T[][] = [];
-
-  for (let i = 0; i < array.length; i += maxSize) {
-    chunks.push(array.slice(i, i + maxSize));
-  }
-
-  return chunks;
-}
-
-/**
  * Get human-readable name for a group type
  */
 function getGroupTypeName(groupType: GroupType): string {
@@ -147,29 +134,23 @@ function getGroupTypeName(groupType: GroupType): string {
 }
 
 /**
- * Split grouped leads into chunks with campaign naming
+ * Split grouped leads into one split per group type with campaign naming
  */
 export function createLeadSplits(
   groupedLeads: Map<GroupType, LeadRow[]>,
-  baseCampaignName: string,
-  maxLeadsPerSplit = 2000
+  baseCampaignName: string
 ): LeadSplit[] {
   const splits: LeadSplit[] = [];
 
   for (const [groupType, leads] of groupedLeads.entries()) {
-    const chunks = chunkArray(leads, maxLeadsPerSplit);
     const groupTypeName = getGroupTypeName(groupType);
+    const campaignName = `${baseCampaignName} - ${groupTypeName}`;
 
-    chunks.forEach((chunk, index) => {
-      const splitNumber = index + 1;
-      const campaignName = `${baseCampaignName} - ${groupTypeName} ${splitNumber}`;
-
-      splits.push({
-        groupType,
-        splitNumber,
-        leads: chunk,
-        campaignName,
-      });
+    splits.push({
+      groupType,
+      splitNumber: 1,
+      leads,
+      campaignName,
     });
   }
 
@@ -181,24 +162,10 @@ export function createLeadSplits(
  */
 export async function processCSVForBulkUpload(
   filePath: string,
-  baseCampaignName: string,
-  maxLeadsPerSplit = 2000
+  baseCampaignName: string
 ): Promise<LeadSplit[]> {
-  // Parse CSV
   const rows = await parseCSV(filePath);
-
-  // Classify leads
   const classifiedLeads = classifyLeads(rows);
-
-  // Group by type
   const groupedLeads = groupLeadsByType(classifiedLeads);
-
-  // Create splits with campaign names
-  const splits = createLeadSplits(
-    groupedLeads,
-    baseCampaignName,
-    maxLeadsPerSplit
-  );
-
-  return splits;
+  return createLeadSplits(groupedLeads, baseCampaignName);
 }

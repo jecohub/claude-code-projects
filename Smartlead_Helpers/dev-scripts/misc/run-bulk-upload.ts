@@ -9,9 +9,9 @@ import * as readline from "readline";
 // ============================================
 // CONFIGURATION - Update these values
 // ============================================
-const csvFilePath = "/Users/jericodelacruz/Desktop/C17/Swayyem/Campaign/Jan 23/Contacts-or-USandUK-or-Tech-2-1769175410223.1-2026-Final-View-export.csv";
-const sourceCampaignId = 2867867;
-const clientId = "128520";
+const csvFilePath = "/Users/jericodelacruz/Desktop/C17/Recho/Campaign/2026-03-10/C17 __ Recho - 2026 March 10 - Wellness Fitness, Manufacturing, Consumer Goods, Furniture Home Furnishings - CEO_Marketers_Product - 50-500 - Non Enterprise.csv";
+const sourceCampaignId = 3019426;
+const clientId = "146909";
 // ============================================
 
 interface MappingPreviewData {
@@ -182,9 +182,20 @@ async function runBulkUpload() {
     process.exit(1);
   }
 
-  const rows = await parseCSV(csvFilePath);
+  const allRows = await parseCSV(csvFilePath);
+  // Find the email column from mappings and filter out rows with blank emails
+  const emailMapping = mappings.find(m => m.smartleadField === "email");
+  const csvColumns = allRows.length > 0 ? Object.keys(allRows[0]) : [];
+  const emailColumn = emailMapping
+    ? ([emailMapping.csvColumn, ...(emailMapping.aliases || [])].find(col => csvColumns.includes(col)) ?? emailMapping.csvColumn)
+    : "Final Email";
+  const rows = allRows.filter(row => {
+    const email = row[emailColumn];
+    return email !== undefined && email !== null && String(email).trim() !== "";
+  });
+  console.log(`Filtered ${allRows.length.toLocaleString()} total rows → ${rows.length.toLocaleString()} with valid emails (removed ${(allRows.length - rows.length).toLocaleString()} blank)`);
   if (rows.length === 0) {
-    console.error("\n❌ CSV file is empty");
+    console.error("\n❌ No rows with valid emails found");
     process.exit(1);
   }
 
@@ -225,20 +236,33 @@ async function runBulkUpload() {
 
   console.log("\n=== BULK UPLOAD RESULT ===");
   console.log(`Status: ${result.success ? "✅ SUCCESS" : "❌ FAILED"}`);
+  const hasVerified = result.summary.totalLeadsVerified != null;
+  const verifiedDiffers = hasVerified && result.summary.totalLeadsVerified !== result.summary.totalLeadsUploaded;
+
   console.log(`\n📊 SUMMARY:`);
   console.log(`  Total Splits: ${result.totalSplits}`);
   console.log(`  Campaigns Created: ${result.summary.campaignsCreated}`);
   console.log(`  Leads Processed: ${result.summary.totalLeadsProcessed.toLocaleString()}`);
-  console.log(`  Leads Uploaded: ${result.summary.totalLeadsUploaded.toLocaleString()}`);
+  if (hasVerified) {
+    console.log(`  Leads Uploaded (Verified): ${result.summary.totalLeadsVerified!.toLocaleString()}${verifiedDiffers ? ` (API reported: ${result.summary.totalLeadsUploaded.toLocaleString()})` : ""}`);
+  } else {
+    console.log(`  Leads Uploaded: ${result.summary.totalLeadsUploaded.toLocaleString()}`);
+  }
   console.log(`  Leads Failed: ${result.summary.totalLeadsFailed.toLocaleString()}`);
 
   if (result.campaignResults.length > 0) {
     console.log(`\n📋 CAMPAIGN DETAILS:`);
     for (const campaign of result.campaignResults) {
-      const status = campaign.uploadedLeads > 0 ? "✓" : "✗";
+      const verified = campaign.verifiedLeadCount;
+      const displayCount = verified ?? campaign.uploadedLeads;
+      const status = displayCount > 0 ? "✓" : "✗";
       console.log(`\n  ${status} ${campaign.campaignName} (ID: ${campaign.campaignId})`);
       console.log(`     Group: ${campaign.groupType} | Split: ${campaign.splitNumber}`);
-      console.log(`     Uploaded: ${campaign.uploadedLeads}/${campaign.totalLeads} leads`);
+      if (verified != null && verified !== campaign.uploadedLeads) {
+        console.log(`     Verified Leads: ${verified.toLocaleString()} (API reported: ${campaign.uploadedLeads.toLocaleString()})`);
+      } else {
+        console.log(`     Uploaded: ${displayCount.toLocaleString()}/${campaign.totalLeads.toLocaleString()} leads`);
+      }
 
       if (campaign.errors.length > 0) {
         console.log(`     Errors: ${campaign.errors.join(", ")}`);
@@ -258,10 +282,12 @@ async function runBulkUpload() {
   console.log(`✅ CAMPAIGNS CREATED WITH AUTOMATED SETTINGS`);
   console.log(`${'='.repeat(80)}`);
 
-  // Section 1: Campaign names with lead counts
+  // Section 1: Campaign names with lead counts (prefer verified)
   console.log(`\n📋 CAMPAIGNS:`);
   result.campaignResults.forEach((campaign) => {
-    console.log(`${campaign.campaignName} - ${campaign.uploadedLeads.toLocaleString()} leads`);
+    const count = campaign.verifiedLeadCount ?? campaign.uploadedLeads;
+    const suffix = campaign.verifiedLeadCount != null ? " (verified)" : "";
+    console.log(`${campaign.campaignName} - ${count.toLocaleString()} leads${suffix}`);
   });
 
   // Section 2: URLs only (easy to copy)

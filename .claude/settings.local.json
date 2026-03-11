@@ -10,7 +10,15 @@
       "Bash(gh auth login:*)",
       "Bash(sudo chown:*)",
       "Bash(gh repo create:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(tree:*)",
+      "Bash(source venv/bin/activate)",
+      "Bash(playwright install:*)",
+      "Bash(git clone:*)",
+      "Bash(ls:*)",
+      "Bash(npx tsx run-bulk-upload.ts)",
+      "Bash(npx tsx:*)",
+      "Bash(npm run report:*)"
     ]
   }
 }

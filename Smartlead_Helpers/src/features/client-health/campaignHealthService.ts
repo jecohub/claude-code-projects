@@ -239,6 +239,7 @@ export function formatHealthSection(health: CampaignHealth, clientName?: string,
 
   lines.push(`Status:         ${health.statusIcon} ${health.status}`);
   lines.push(`Will run out:   ${runOutDateStr} (${health.daysRemaining} days)`);
+  lines.push(`Uncontacted:    ${health.remainingLeads.notStarted.toLocaleString()} leads`);
   lines.push(`Today:          ${todayStr}`);
   lines.push('');
   lines.push(`Remaining leads:     ${health.remainingLeads.total.toLocaleString()} (Not Started: ${health.remainingLeads.notStarted.toLocaleString()} | In Progress: ${health.remainingLeads.inProgress.toLocaleString()})`);

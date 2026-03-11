@@ -25,5 +25,76 @@
       "Head Operations", "Head of Operations", "Operations Head",
       "Director Operations", "Director of Operations", "Operations Director"
     ]
+  },
+  "recho_fb_hospitality": {
+    "description": "Recho F&B Hospitality 50-1000 target personas (strict department + title)",
+    "roles": [
+      "CEO", "Chief Executive Officer",
+      "COO", "Chief Operating Officer",
+      "CMO", "Chief Marketing Officer",
+      "CPO", "Chief Product Officer",
+      "VP Product", "VP of Product", "Product VP",
+      "AVP Product", "AVP of Product", "Product AVP",
+      "SVP Product", "SVP of Product", "Product SVP",
+      "President Product", "Product President",
+      "Head Product", "Head of Product", "Product Head",
+      "Director Product", "Director of Product", "Product Director",
+      "VP Marketing", "VP of Marketing", "Marketing VP",
+      "AVP Marketing", "AVP of Marketing", "Marketing AVP",
+      "SVP Marketing", "SVP of Marketing", "Marketing SVP",
+      "President Marketing", "Marketing President",
+      "Head Marketing", "Head of Marketing", "Marketing Head",
+      "Director Marketing", "Director of Marketing", "Marketing Director",
+      "VP Operations", "VP of Operations", "Operations VP",
+      "AVP Operations", "AVP of Operations", "Operations AVP",
+      "SVP Operations", "SVP of Operations", "Operations SVP",
+      "President Operations", "Operations President",
+      "Head Operations", "Head of Operations", "Operations Head",
+      "Director Operations", "Director of Operations", "Operations Director"
+    ]
+  },
+  "recho_fb_hospitality_loose": {
+    "description": "Recho F&B Hospitality 50-1000 loose seniority filter (aim ~80-90% kept)",
+    "roles": [
+      "CEO", "Chief Executive Officer",
+      "COO", "Chief Operating Officer",
+      "CMO", "Chief Marketing Officer",
+      "CPO", "Chief Product Officer",
+      "Chief", "C-Suite", "C Suite",
+      "President", "Executive Vice President", "EVP",
+      "VP", "V P", "Vice President",
+      "SVP", "Senior Vice President",
+      "AVP", "Associate Vice President",
+      "Head",
+      "Director", "Regional Director", "Area Director", "Corporate Director",
+      "Partner",
+      "Founder", "Co-Founder", "Co Founder",
+      "Owner",
+      "Principal",
+      "Managing Director",
+      "General Manager"
+    ]
+  },
+  "recho_fb_hospitality_junior_blocklist": {
+    "description": "Recho F&B Hospitality junior/obvious non-decision-maker titles to REMOVE",
+    "roles": [
+      "Server", "Waiter", "Waitress",
+      "Host", "Hostess",
+      "Busser", "Food Runner", "Runner",
+      "Bartender", "Barback",
+      "Barista",
+      "Line Cook", "Prep Cook", "Cook", "Chef de Partie",
+      "Dishwasher", "Steward",
+      "Housekeeper", "Room Attendant", "Laundry Attendant",
+      "Front Desk Agent", "Front Desk Associate", "Front Desk",
+      "Receptionist", "Guest Service Agent", "Guest Services",
+      "Cashier",
+      "Sales Associate", "Sales Representative",
+      "Concierge",
+      "Attendant",
+      "Host Team Member", "Crew Member",
+      "Team Member", "Crew",
+      "Intern", "Trainee"
+    ]
   }
 }
